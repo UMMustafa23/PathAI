@@ -1,0 +1,124 @@
+    body {
+      margin: 0;
+      background: #D5D6D7;
+      font-family: 'Manrope', sans-serif;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Full-page fixed gradient background */
+    .top-gradient-bg {
+      position: fixed;
+      inset: 0; /* top:0; right:0; bottom:0; left:0; */
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(46,68,108,1) 0%, rgba(92,133,208,0.75) 66%, rgba(213,214,215,0) 100%);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      z-index: -1; /* place behind page content */
+      pointer-events: none;
+      opacity: 0.9;
+    }
+    /* NAVBAR clean minimal */
+    .navbar {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 20px;
+      z-index: 2;
+    }
+
+    .nav-left, .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* clean circular controls */
+    .circle-btn, .pfp-btn, .icon-btn {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .circle-btn { background: white; }
+
+    .pfp-btn {
+      background: white;
+      overflow: hidden;
+    }
+    .pfp-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .icon-btn { background: white; }
+
+    /* HEADLINE area */
+    .hero {
+      margin-top: 90px;
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .headline {
+      font-size: 96px;
+      font-weight: 500;
+      color: black;
+      margin: 0;
+    }
+
+    .subheadline {
+      margin-top: 10px;
+      font-size: 40px;
+      font-weight: 300;
+      color: #555658;
+    }
+
+    /* bottom buttons with separation from bg */
+    .bottom-container {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      pointer-events: auto;
+      background: transparent;
+    }
+
+    .main-btn {
+      width: 100%;
+      max-width: 720px;
+      height: 55px;
+      border-radius: 30px;
+      background: radial-gradient(circle, #567BBF 0%, #9AABCC 53%);
+      border: 1px solid #ABB0B2;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 24px;
+      font-weight: lighter;
+      color: rgba(198,195,195,0.92);
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .main-btn:hover {
+      transform: translateY(-3px);
+    }
