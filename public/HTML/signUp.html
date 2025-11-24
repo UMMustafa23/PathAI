@@ -27,17 +27,17 @@
 
     <div class="input-group">
       Email
-      <input type="email" placeholder="Email" />
+      <input type="email" placeholder="What's your email?" id="regEmail" />
     </div>
 
     <div class="input-group">
       Username
-      <input type="text" placeholder="Username" />
+      <input type="text" placeholder="Think of a unique username" id="regUsername" />
     </div>
 
     <div class="input-group">
       Password
-      <input type="password" placeholder="Password" />
+      <input type="password" placeholder="Make up a secure password" id="regPassword" />
     </div>
 
     <div class="input-group">
@@ -47,8 +47,8 @@
 
     <div class="row3">
       <div class="input-group">
-        <label for="age-select">Age</label>
-        <select id="age-select">
+        <label for="regAge">Age</label>
+        <select id="regAge">
           <option value="">Select</option>
           <option value="10">10</option>
           <option value="11">11</option>
@@ -72,11 +72,11 @@
 
       <div class="input-group">
         Grade
-        <input id="grade" type="text" placeholder="Grade" />
+        <input id="regGrade" type="text" placeholder="What grade are you in?" />
       </div>
       <div class="input-group">
-        <label for="gender-select">Gender</label>
-        <select id="gender-select">
+        <label for="regGender">Gender</label>
+        <select id="regGender">
           <option value="">Select</option>
           <option value="female">Female</option>
           <option value="male">Male</option>
@@ -88,13 +88,13 @@
 
     <div class="input-group">
       Educational Institution (Optional)
-      <input type="text" placeholder="Educational Institution" />
+      <input type="text" placeholder="Educational Institution" id="regInstitution" />
     </div>
 
     <div class="input-group">
-    <div class="input-group">
-      <label for="region-select">Region / Country</label>
-      <select id="region-select">
+      <div class="input-group">
+        <label for="regRegion">Region / Country</label>
+        <select id="regRegion">
         <option value="AF">Afghanistan</option>
         <option value="AX">Åland Islands</option>
         <option value="AL">Albania</option>
@@ -347,19 +347,21 @@
         <option value="YE">Yemen</option>
         <option value="ZM">Zambia</option>
         <option value="ZW">Zimbabwe</option>
-      </select>
-    </div>
+        </select>
+      </div>
+    
+      <div class="checkbox-area">
+        <input type="checkbox" id="tos" />
+        <label for="tos">I agree to the Terms of Service and Privacy Policy</label>
+      </div>
 
-    <div class="checkbox-area">
-      <input type="checkbox" id="tos" />
-      <label for="tos">I agree to the Terms of Service and Privacy Policy</label>
     </div>
-
   </div>
 
   <div class="bottom-container">
-    <button class="main-btn" type="button" onclick="location.href='logIn.html'">Sign Up</button>
+    <button class="regBtn" type="button">Sign Up</button>
   </div>
 
 </body>
+<script src="../js/signUp.js"></script>
 </html>

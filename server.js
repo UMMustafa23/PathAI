@@ -45,6 +45,30 @@ wss.on("connection", (ws) => {
           data: completion.choices[0].message.content,
         })
       );
+    } else if (msgToArr[0] === "submitAssessment") {
+      const assessmentResults = JSON.parse(msgToArr[1]);
+      const messageToAi = `Analyze the following assessment results and provide a detailed report on the user's personality traits, strengths, weaknesses, and suitable career paths based on their answers: ${JSON.stringify(
+        assessmentResults
+      )}. Please structure the report in clear sections with headings for each aspect analyzed. Give me a personality type, recommended carrers, university program suggestions and a personalised study plan.`;
+
+      const completionForReport = await openai.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a helpful career assessment assistant. Follow directions carefully and exactly as presented to you.",
+          },
+          { role: "user", content: messageToAi },
+        ],
+        model: "deepseek-chat",
+      });
+
+      ws.send(
+        JSON.stringify({
+          type: "assessmentReport",
+          data: completionForReport.choices[0].message.content,
+        })
+      );
     }
   });
 });
@@ -100,6 +124,7 @@ app.get("/createAccount", (req, res) => {
       sessionToken: sessionToken,
       ip_encrypted: bcrypt.hashSync(requestIp.getClientIp(req), 10),
       location: clientLocation,
+      region: userData.region,
     });
 
     user.save().then((response) => {

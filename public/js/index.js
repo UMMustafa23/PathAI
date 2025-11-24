@@ -97,6 +97,7 @@ socket.onmessage = (event) => {
       content: receivedMsg.data,
     });
     fillMessages();
+    saveMessageHistory();
   }
 };
 

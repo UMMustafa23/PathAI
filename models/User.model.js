@@ -12,6 +12,9 @@ const UserSchema = new Schema(
     age: {
       type: Number,
     },
+    region: {
+      type: String,
+    },
     grade: {
       type: String,
     },
@@ -43,7 +46,19 @@ const UserSchema = new Schema(
     sessionToken: {
       type: String,
     },
-    updates: {
+    personalityType: {
+      type: String,
+      default: "Not Specified",
+    },
+    recommendedCareers: {
+      type: Array,
+      default: [],
+    },
+    uniProgramSuggestions: {
+      type: Array,
+      default: [],
+    },
+    personalizedStudyPlan: {
       type: Array,
       default: [],
     },
