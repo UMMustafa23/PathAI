@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="../CSS/assistant.css" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="top-gradient-bg"></div>
+
+  <div class="navbar">
+    <div class="nav-left">
+      <button class="circle-btn" type="button" onclick="location.href='index.html'" aria-label="Home"></button>
+      <button class="pfp-btn" onclick="location.href='profile.html'"><img src="https://via.placeholder.com/150" alt="Profile"></button>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn">⚙️</button>
+      <button class="icon-btn">🔔</button>
+    </div>
+  </div>
+
+  <div class="main-nav">
+  <a href="test.html" class="inactive-main">Take a test</a>
+  <a href="assistant.css" class="active-main">Study Assistant</a>
+</div>
+
+<div class="sub-nav">
+  <a href="assistant.html" class="active-sub">Assistant</a>
+  <a href="dailyPlan.html" class="inactive-sub">Daily plan</a>
+</div>
+<div class="sub-divider"></div>
+
+
+  <div class="chat-container" id="chat">
+    <div class="message">Hello! How can I help you today?</div>
+  </div>
+
+  <div class="input-bar">
+    <input type="text" id="msgInput" class="input-field" placeholder="Type a message..." />
+    <div class="send-btn" id="sendBtn">➤</div>
+  </div>
+
+  <script src="../JS/assistant.js"></script>
+
+</body>
+</html>
