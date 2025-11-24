@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Take a Test – Path AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="../CSS/test.css" rel="stylesheet" />
+</head>
+<body>
+<div class="top-gradient-bg"></div>
+<div class="navbar">
+  <div class="nav-left">
+    <button class="circle-btn" aria-label="Go to homepage" onclick="location.href='../index.html'"></button>
+    <button class="pfp-btn" aria-label="Open profile menu">
+      <img src="https://via.placeholder.com/150" alt="User profile picture">
+    </button>
+  </div>
+  <div class="nav-right">
+    <button class="icon-btn">⚙️</button>
+    <button class="icon-btn">🔔</button>
+  </div>
+</div>
+
+<div class="main-nav">
+  <a class="active-main">Take a test</a>
+  <a href="assistant.html" class="inactive-main">Study Assistant</a>
+</div>
+
+<div class="sub-nav">
+  <a class="active-sub">Test</a>
+  <a class="inactive-sub">Past outputs</a>
+</div>
+<div class="sub-divider"></div>
+
+<div class="progress-container"><div class="progress-fill" id="progress"></div></div>
+
+<div id="questions"></div>
+
+<button style="margin:40px auto; display:block; width:200px; height:55px; border-radius:15px; background:black; color:white; font-size:20px; border:none; cursor:pointer;">Submit</button>
+<script src="../JS/scripts.js"></script>
+</body>
+</html>
