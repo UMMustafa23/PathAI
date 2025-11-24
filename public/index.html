@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Career Orientation Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+      }
+      section {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      label {
+        display: block;
+        margin-top: 0.5rem;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 0.5rem;
+        margin-top: 0.3rem;
+      }
+      button {
+        margin-top: 1rem;
+        padding: 0.7rem 1.2rem;
+      }
+      .chat-box {
+        border: 1px solid #ddd;
+        padding: 1rem;
+        height: 200px;
+        overflow-y: auto;
+        margin-top: 1rem;
+        background: #fafafa;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Career Orientation Demo Page</h1>
+
+    <!-- Chat with AI -->
+    <section>
+      <h2>Chat with AI</h2>
+      <div id="chatBox" class="messages-container"></div>
+      <textarea
+        id="chatInput"
+        class="message-input"
+        placeholder="Type a message..."
+      ></textarea>
+      <button class="send-btn">Send</button>
+    </section>
+
+    <!-- Create Account -->
+    <section>
+      <h2>Create Account</h2>
+      <label>Email:<input id="regEmail" type="email" /></label>
+      <label>Username:<input id="regUsername" type="text" /></label>
+      <label
+        >Gender:
+        <select id="regGender">
+          <option value="">Select gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label>Age:<input id="regAge" type="number" min="10" max="100" /></label>
+      <label>Grade:<input id="regGrade" type="text" /></label>
+      <label>Major:<input id="regMajor" type="text" /></label>
+      <label
+        >Educational Institution:<input id="regInstitution" type="text"
+      /></label>
+      <label>Password:<input id="regPassword" type="password" /></label>
+      <label>Confirm Password:<input id="regConfirm" type="password" /></label>
+      <button class="regBtn">Create Account</button>
+      <p id="regStatus"></p>
+    </section>
+
+    <!-- Login -->
+    <section>
+      <h2>Login</h2>
+      <label>Email:<input id="loginEmail" type="email" /></label>
+      <label>Password:<input id="loginPassword" type="password" /></label>
+      <button class="login-btn">Login</button>
+      <button class="logout-btn">Logout</button>
+      <p id="loginStatus"></p>
+    </section>
+
+    <!-- Career Orientation Test -->
+    <section>
+      <h2>Career Orientation Test</h2>
+      <p>Select your answer for each question.</p>
+
+      <div id="questions">
+        <div class="question">
+          <p>1. I enjoy solving logical problems.</p>
+          <label
+            ><input type="radio" name="q1" value="1" /> Strongly Disagree</label
+          >
+          <label><input type="radio" name="q1" value="2" /> Disagree</label>
+          <label><input type="radio" name="q1" value="3" /> Neutral</label>
+          <label><input type="radio" name="q1" value="4" /> Agree</label>
+          <label
+            ><input type="radio" name="q1" value="5" /> Strongly Agree</label
+          >
+        </div>
+
+        <div class="question">
+          <p>2. I prefer working with people rather than objects or data.</p>
+          <label
+            ><input type="radio" name="q2" value="1" /> Strongly Disagree</label
+          >
+          <label><input type="radio" name="q2" value="2" /> Disagree</label>
+          <label><input type="radio" name="q2" value="3" /> Neutral</label>
+          <label><input type="radio" name="q2" value="4" /> Agree</label>
+          <label
+            ><input type="radio" name="q2" value="5" /> Strongly Agree</label
+          >
+        </div>
+
+        <div class="question">
+          <p>
+            3. I enjoy creative tasks such as writing, designing, or inventing.
+          </p>
+          <label
+            ><input type="radio" name="q3" value="1" /> Strongly Disagree</label
+          >
+          <label><input type="radio" name="q3" value="2" /> Disagree</label>
+          <label><input type="radio" name="q3" value="3" /> Neutral</label>
+          <label><input type="radio" name="q3" value="4" /> Agree</label>
+          <label
+            ><input type="radio" name="q3" value="5" /> Strongly Agree</label
+          >
+        </div>
+
+        <div class="question">
+          <p>
+            4. I like organizing tasks, planning work, and maintaining
+            structure.
+          </p>
+          <label
+            ><input type="radio" name="q4" value="1" /> Strongly Disagree</label
+          >
+          <label><input type="radio" name="q4" value="2" /> Disagree</label>
+          <label><input type="radio" name="q4" value="3" /> Neutral</label>
+          <label><input type="radio" name="q4" value="4" /> Agree</label>
+          <label
+            ><input type="radio" name="q4" value="5" /> Strongly Agree</label
+          >
+        </div>
+
+        <div class="question">
+          <p>
+            5. I feel motivated when working on hands-on practical activities.
+          </p>
+          <label
+            ><input type="radio" name="q5" value="1" /> Strongly Disagree</label
+          >
+          <label><input type="radio" name="q5" value="2" /> Disagree</label>
+          <label><input type="radio" name="q5" value="3" /> Neutral</label>
+          <label><input type="radio" name="q5" value="4" /> Agree</label>
+          <label
+            ><input type="radio" name="q5" value="5" /> Strongly Agree</label
+          >
+        </div>
+      </div>
+
+      <button onclick="submitTest()">Send to AI</button>
+      <p id="testResult"></p>
+    </section>
+
+    <script src="./js/index.js"></script>
+
+    <!-- <script>
+      // --- Chat with AI (mock) ---
+      function sendChat() {
+        const box = document.getElementById("chatBox");
+        const input = document.getElementById("chatInput");
+        const msg = input.value.trim();
+        if (!msg) return;
+        box.innerHTML += `<div><strong>You:</strong> ${msg}</div>`;
+        input.value = "";
+        setTimeout(() => {
+          box.innerHTML += `<div><strong>AI:</strong> This is a mock AI response to: "${msg}"</div>`;
+          box.scrollTop = box.scrollHeight;
+        }, 500);
+      }
+
+      // --- Mock API helpers ---
+      async function fakeRequest(statusElem, action, data) {
+        statusElem.textContent = action + "...";
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            statusElem.textContent = action + " successful! (mock)";
+            resolve();
+          }, 800);
+        });
+      }
+
+      // --- Register ---
+      async function register() {
+        const email = document.getElementById("regEmail").value;
+        const pw = document.getElementById("regPassword").value;
+        const status = document.getElementById("regStatus");
+        await fakeRequest(status, "Account creation");
+      }
+
+      // --- Login ---
+      async function login() {
+        const email = document.getElementById("loginEmail").value;
+        const pw = document.getElementById("loginPassword").value;
+        const status = document.getElementById("loginStatus");
+        await fakeRequest(status, "Login");
+      }
+
+      // --- Career Test ---
+      async function submitTest() {
+        const answers = document.getElementById("testAnswers").value;
+        const result = document.getElementById("testResult");
+        result.textContent = "Sending to AI...";
+        setTimeout(() => {
+          result.textContent =
+            "Mock evaluation: You seem oriented toward analytical and creative roles.";
+        }, 1000);
+      }
+    </script> -->
+  </body>
+</html>
