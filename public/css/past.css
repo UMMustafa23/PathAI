@@ -117,7 +117,7 @@ body {
   font-size: 16px;
 }
 
-.todo-list {
+.outputs-list {
   width: 90%;
   max-width: 450px;
   max-height: 60%;
@@ -125,11 +125,11 @@ body {
   overflow-y: scroll;
 }
 
-.todo-list::-webkit-scrollbar {
+.outputs-list::-webkit-scrollbar {
   display: none;
 }
 
-.todo-item {
+.output-item {
   background: white;
   padding: 14px 20px;
   border-radius: 18px;
@@ -140,12 +140,12 @@ body {
   flex-direction: column;
 }
 
-.todo-time {
+.output-time {
   font-size: 12px;
   opacity: 0.6;
 }
 
-.todo-text {
+.output-text {
   font-size: 17px;
   margin-top: 4px;
 }

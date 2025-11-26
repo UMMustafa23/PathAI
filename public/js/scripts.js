@@ -8,6 +8,10 @@ socket.onopen = () => {
   console.log("WebSocket connection established.");
 };
 
+document.querySelector(".past-btn").onclick = () => {
+  document.location = "/HTML/pastOutputs.html";
+};
+
 const questions = [
   "I enjoy solving complex problems even if they take a long time.",
   "I prefer analyzing data before making decisions.",

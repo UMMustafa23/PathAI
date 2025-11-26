@@ -18,7 +18,6 @@ mongoose
 
 app.use("/", express.static(path.join(__dirname, "public")));
 const wss = new WebSocket.Server({ server: server });
-let clients = [];
 
 const openai = new OpenAI({
   baseURL: "https://api.deepseek.com",
@@ -67,6 +66,33 @@ wss.on("connection", (ws) => {
         JSON.stringify({
           type: "assessmentReport",
           data: completionForReport.choices[0].message.content,
+        })
+      );
+    } else if (msgToArr[0] === "generate-daily-plan") {
+      const tasks = JSON.parse(msgToArr[1]);
+      const messageToAi = `Create a detailed daily plan for tomorrow based on the following tasks: ${tasks.join(
+        ", "
+      )}. Please keep in mind that the user is sending a list of tasks he is planning on doing the next day
+      and is just asking you to turn his boring list of tasks into a good looking better plan which you can 
+      make by allocating specific time slots for each task and ensure a balanced distribution of activities 
+      throughout the day. Include breaks and leisure time as well. Do NOT add any extra tasks that are not mentioned`;
+
+      const completionForDailyPlan = await openai.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a helpful to do list planner. Follow directions carefully and exactly as presented to you.",
+          },
+          { role: "user", content: messageToAi },
+        ],
+        model: "deepseek-chat",
+      });
+
+      ws.send(
+        JSON.stringify({
+          type: "dailyPlan",
+          data: completionForDailyPlan.choices[0].message.content,
         })
       );
     }
