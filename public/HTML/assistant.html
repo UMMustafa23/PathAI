@@ -3,59 +3,91 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Assistant</title>
+    <title>AI Assistant - Path AI</title>
+    <link rel="stylesheet" href="../css/assistant.css" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap"
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;600&family=DM+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link href="../CSS/assistant.css" rel="stylesheet" />
   </head>
   <body>
-    <div class="top-gradient-bg"></div>
-
-    <div class="navbar">
+    <div class="top-nav">
       <div class="nav-left">
-        <button
-          class="circle-btn"
-          type="button"
-          onclick="location.href='index.html'"
-          aria-label="Home"
-        ></button>
-        <button class="pfp-btn" onclick="location.href='profile.html'">
-          <img src="https://via.placeholder.com/150" alt="Profile" />
-        </button>
+        <a href="profile.html" class="profile-btn" aria-label="Profile">
+          <div class="profile-icon" aria-hidden="true"></div>
+        </a>
       </div>
       <div class="nav-right">
-        <button class="icon-btn">⚙️</button>
-        <button class="icon-btn">🔔</button>
+        <a href="#notifications" class="icon-circle" aria-label="Notifications"
+          ><i class="fas fa-bell"></i
+        ></a>
+        <a href="#settings" class="icon-circle" aria-label="Settings"
+          ><i class="fas fa-cog"></i
+        ></a>
       </div>
     </div>
 
-    <div class="main-nav">
-      <a href="test.html" class="inactive-main">Take a test</a>
-      <a href="assistant.css" class="active-main">Study Assistant</a>
+    <button class="toggle-btn" onclick="toggleNav()" id="toggleBtn">
+      <span id="arrowIcon">></span>
+    </button>
+
+    <div id="mySidenav" class="sidenav">
+      <div class="sidebar-content">
+        <a href="../index.html"><i class="fas fa-home"></i>Home</a>
+
+        <a
+          href="javascript:void(0)"
+          class="has-submenu"
+          onclick="toggleSubmenu('testSubmenu', this)"
+          ><i class="fas fa-clipboard-list"></i>Take a test</a
+        >
+        <div id="testSubmenu" class="submenu">
+          <a href="test.html">Test</a>
+          <a href="pastOutputs.html">Past Outputs</a>
+        </div>
+
+        <a
+          href="javascript:void(0)"
+          class="has-submenu"
+          onclick="toggleSubmenu('aiSubmenu', this)"
+          ><i class="fas fa-robot"></i>Study Assistant</a
+        >
+        <div id="aiSubmenu" class="submenu">
+          <a href="assistant.html">Assistant</a>
+          <a href="dailyPlan.html">Daily Plans</a>
+        </div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <a href="signUp.html"><i class="fas fa-user-plus"></i>Sign Up</a>
+        <a href="../index.html"><i class="fas fa-sign-out-alt"></i>Log Out</a>
+      </div>
     </div>
 
-    <div class="sub-nav">
-      <a href="assistant.html" class="active-sub">Assistant</a>
-      <a href="dailyPlan.html" class="inactive-sub">Daily plan</a>
-    </div>
-    <div class="sub-divider"></div>
-
-    <div class="chat-container" id="chat">
-      <div class="message">Hello! How can I help you today?</div>
+    <div class="chat-container" id="chatContainer">
+      <div class="welcome-message">
+        <i class="fas fa-robot"></i>
+        <h2>Hello! I'm your AI Study Assistant</h2>
+        <p>How can I help you today?</p>
+      </div>
     </div>
 
-    <div class="input-bar">
+    <div class="input-container">
       <input
         type="text"
-        id="msgInput"
-        class="input-field"
-        placeholder="Type a message..."
+        id="messageInput"
+        class="message-input"
+        placeholder="Type your message here..."
       />
-      <div class="send-btn" id="sendBtn">➤</div>
+      <button class="send-btn" id="sendBtn" aria-label="Send message">
+        <i class="fas fa-paper-plane"></i>
+      </button>
     </div>
 
-    <script src="../JS/assistant.js"></script>
+    <script src="../js/assistant.js"></script>
   </body>
 </html>

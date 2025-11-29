@@ -16,7 +16,7 @@ mongoose
   .connect(process.env.DB_CONNECTION_STRING)
   .then(console.log("Connected to mongoDB"));
 
-app.use("/", express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public")));
 const wss = new WebSocket.Server({ server: server });
 
 const openai = new OpenAI({
@@ -46,9 +46,230 @@ wss.on("connection", (ws) => {
       );
     } else if (msgToArr[0] === "submitAssessment") {
       const assessmentResults = JSON.parse(msgToArr[1]);
-      const messageToAi = `Analyze the following assessment results and provide a detailed report on the user's personality traits, strengths, weaknesses, and suitable career paths based on their answers: ${JSON.stringify(
+      const messageToAi = `Analyze the following assessment results and 
+      provide a detailed report on the user's personality traits, 
+      strengths, weaknesses, and suitable career paths based on their answers: ${JSON.stringify(
         assessmentResults
-      )}. Please structure the report in clear sections with headings for each aspect analyzed. Give me a personality type, recommended carrers, university program suggestions and a personalised study plan.`;
+      )}. Please write your answer in the form of an html document 
+      using the following structure WITHOUT adding ANY styling and CSS, that will be handled separately:
+        <h1 class="main-heading">Your Career Assessment Results</h1>
+
+        <!-- Personal Analysis Section -->
+        <section class="analysis-section">
+            <div class="personality-card">
+                <h2 class="card-heading">Analytical Thinker</h2>
+                <p class="card-subtext">You excel at breaking down complex problems, identifying patterns, and making data-driven decisions. Your logical approach helps you solve challenges systematically.</p>
+                <div class="qualities-container">
+                    <span class="quality-tag">Problem Solving</span>
+                    <span class="quality-tag">Critical Thinking</span>
+                    <span class="quality-tag">Data Analysis</span>
+                    <span class="quality-tag">Strategic Planning</span>
+                </div>
+            </div>
+
+            <div class="personality-card">
+                <h2 class="card-heading">Creative Innovator</h2>
+                <p class="card-subtext">Your ability to think outside the box and generate unique solutions sets you apart. You thrive in environments that encourage experimentation and creative expression.</p>
+                <div class="qualities-container">
+                    <span class="quality-tag">Innovation</span>
+                    <span class="quality-tag">Creativity</span>
+                    <span class="quality-tag">Adaptability</span>
+                    <span class="quality-tag">Vision</span>
+                </div>
+            </div>
+
+            <div class="personality-card">
+                <h2 class="card-heading">Team Collaborator</h2>
+                <p class="card-subtext">You work exceptionally well with others, understanding different perspectives and facilitating productive group dynamics. Your communication skills enhance team performance.</p>
+                <div class="qualities-container">
+                    <span class="quality-tag">Communication</span>
+                    <span class="quality-tag">Empathy</span>
+                    <span class="quality-tag">Leadership</span>
+                    <span class="quality-tag">Cooperation</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommended Careers Section -->
+        <section class="careers-section">
+            <h2 class="section-heading">Recommended Careers</h2>
+            
+            <div class="career-card">
+                <div class="match-badge">94%</div>
+                <h3 class="career-title">Software Engineer</h3>
+                <p class="career-stats">$120,000/year • 22% growth</p>
+                <p class="career-description">Design, develop, and maintain software applications. Work with cutting-edge technologies to solve real-world problems through code.</p>
+            </div>
+
+            <div class="career-card">
+                <div class="match-badge">89%</div>
+                <h3 class="career-title">Data Scientist</h3>
+                <p class="career-stats">$115,000/year • 35% growth</p>
+                <p class="career-description">Analyze complex data sets to extract meaningful insights. Use statistical methods and machine learning to drive business decisions.</p>
+            </div>
+
+            <div class="career-card">
+                <div class="match-badge">86%</div>
+                <h3 class="career-title">UX Designer</h3>
+                <p class="career-stats">$95,000/year • 18% growth</p>
+                <p class="career-description">Create intuitive and engaging user experiences for digital products. Combine creativity with user research to design effective interfaces.</p>
+            </div>
+        </section>
+
+        <!-- Top University Programs Section -->
+        <section class="university-section">
+            <h2 class="section-heading">Top University Programs</h2>
+            
+            <div class="university-grid">
+                <div class="university-card">
+                    <h3 class="university-title">MIT - Computer Science</h3>
+                    <p class="university-majors">Software Engineering, AI & Machine Learning, Cybersecurity</p>
+                    <div class="university-info">
+                        <div class="info-row">
+                            <span class="info-label">Acceptance Rate:</span>
+                            <span class="info-value">7%</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Annual Tuition:</span>
+                            <span class="info-value">$55,450</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="university-card">
+                    <h3 class="university-title">Stanford - Engineering</h3>
+                    <p class="university-majors">Computer Science, Data Science, Electrical Engineering</p>
+                    <div class="university-info">
+                        <div class="info-row">
+                            <span class="info-label">Acceptance Rate:</span>
+                            <span class="info-value">5%</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Annual Tuition:</span>
+                            <span class="info-value">$57,693</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="university-card">
+                    <h3 class="university-title">Carnegie Mellon - SCS</h3>
+                    <p class="university-majors">Software Engineering, Robotics, Human-Computer Interaction</p>
+                    <div class="university-info">
+                        <div class="info-row">
+                            <span class="info-label">Acceptance Rate:</span>
+                            <span class="info-value">15%</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Annual Tuition:</span>
+                            <span class="info-value">$59,864</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="university-card">
+                    <h3 class="university-title">UC Berkeley - EECS</h3>
+                    <p class="university-majors">Computer Science, Data Science, Electrical Engineering</p>
+                    <div class="university-info">
+                        <div class="info-row">
+                            <span class="info-label">Acceptance Rate:</span>
+                            <span class="info-value">17%</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Annual Tuition:</span>
+                            <span class="info-value">$44,007</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Personalized Study Plan Section -->
+        <section class="study-plan-section">
+            <h2 class="section-heading">Personalized Study Plan</h2>
+            
+            <div class="study-plan-container">
+                <div class="study-resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="resource-content">
+                        <h4 class="resource-title">Introduction to Computer Science</h4>
+                        <p class="resource-description">Start with Python fundamentals and basic algorithms</p>
+                        <a href="#" class="resource-link">View Course <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+                <div class="study-resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <div class="resource-content">
+                        <h4 class="resource-title">Data Structures & Algorithms</h4>
+                        <p class="resource-description">Master essential problem-solving techniques</p>
+                        <a href="#" class="resource-link">View Course <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+                <div class="study-resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="resource-content">
+                        <h4 class="resource-title">Database Management</h4>
+                        <p class="resource-description">Learn SQL and database design principles</p>
+                        <a href="#" class="resource-link">View Course <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+                <div class="study-resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-code-branch"></i>
+                    </div>
+                    <div class="resource-content">
+                        <h4 class="resource-title">Software Engineering Practices</h4>
+                        <p class="resource-description">Version control, testing, and project management</p>
+                        <a href="#" class="resource-link">View Course <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+                <div class="study-resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="resource-content">
+                        <h4 class="resource-title">Machine Learning Basics</h4>
+                        <p class="resource-description">Introduction to AI and ML concepts</p>
+                        <a href="#" class="resource-link">View Course <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+                <div class="study-resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <div class="resource-content">
+                        <h4 class="resource-title">Web Development</h4>
+                        <p class="resource-description">HTML, CSS, JavaScript, and modern frameworks</p>
+                        <a href="#" class="resource-link">View Course <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        Fill in any of the shown information in the html structure above with your 
+        own research based on the assessment results provided. From you I require 
+        ONLY the html document as per the structure shown above WITHOUT ANY CSS or STYLING! 
+        And do NOT change any classes, ids, names or any part of the structure shown above. 
+        Only fill in the content appropriately.
+      `;
+
+      // Please structure the report in clear sections with headings
+      // for each aspect analyzed. Give me a personality type, recommended
+      // carrers, university program suggestions and a personalised study plan.
+      //Ensure that the headings and paragraphs are wrapped in <h2> and <p> HTML tags respectively.
+      // It is important that you ONLY use the information provided in the assessment results
+      // to generate the report and do NOT make any assumptions or add any information that is not
+      // explicitly mentioned in the results.
 
       const completionForReport = await openai.chat.completions.create({
         messages: [
@@ -75,7 +296,8 @@ wss.on("connection", (ws) => {
       )}. Please keep in mind that the user is sending a list of tasks he is planning on doing the next day
       and is just asking you to turn his boring list of tasks into a good looking better plan which you can 
       make by allocating specific time slots for each task and ensure a balanced distribution of activities 
-      throughout the day. Include breaks and leisure time as well. Do NOT add any extra tasks that are not mentioned`;
+      throughout the day. Include breaks and leisure time as well. Do NOT add any extra tasks that are not mentioned. 
+      Also, could you ensure that every heading and paragraph are wrapped in <h2> and <p> HTML tags respectively.`;
 
       const completionForDailyPlan = await openai.chat.completions.create({
         messages: [
@@ -109,6 +331,10 @@ const transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false,
   },
+});
+
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname + "/public/HTML/logIn.html"));
 });
 
 app.get("/createAccount", (req, res) => {

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile - Path AI</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/profile.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;600&family=DM+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="top-nav">
+      <div class="nav-left">
+        <a href="#profile" class="profile-btn" aria-label="Profile">
+          <div class="profile-icon" aria-hidden="true"></div>
+        </a>
+      </div>
+      <div class="nav-right">
+        <a href="#notifications" class="icon-circle" aria-label="Notifications"
+          ><i class="fas fa-bell"></i
+        ></a>
+        <a href="#settings" class="icon-circle" aria-label="Settings"
+          ><i class="fas fa-cog"></i
+        ></a>
+      </div>
+    </div>
+
+    <button class="toggle-btn" onclick="toggleNav()" id="toggleBtn">
+      <span id="arrowIcon">></span>
+    </button>
+
+    <div id="mySidenav" class="sidenav">
+      <div class="sidebar-content">
+        <a href="../index.html"><i class="fas fa-home"></i>Home</a>
+
+        <a
+          href="javascript:void(0)"
+          class="has-submenu"
+          onclick="toggleSubmenu('testSubmenu', this)"
+          ><i class="fas fa-clipboard-list"></i>Take a test</a
+        >
+        <div id="testSubmenu" class="submenu">
+          <a href="test.html">Test</a>
+          <a href="pastOutputs.html">Past Outputs</a>
+        </div>
+
+        <a
+          href="javascript:void(0)"
+          class="has-submenu"
+          onclick="toggleSubmenu('aiSubmenu', this)"
+          ><i class="fas fa-robot"></i>Study Assistant</a
+        >
+        <div id="aiSubmenu" class="submenu">
+          <a href="assistant.html">Assistant</a>
+          <a href="dailyPlans.html">Daily Plans</a>
+        </div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <a href="signUp.html"><i class="fas fa-user-plus"></i>Sign Up</a>
+        <a href="../index.html"><i class="fas fa-sign-out-alt"></i>Log Out</a>
+      </div>
+    </div>
+
+    <div class="profile-container">
+      <!-- Header Section -->
+      <div class="profile-header">
+        <div class="header-content">
+          <div class="profile-picture-container">
+            <div class="profile-picture">
+              <i class="fas fa-user"></i>
+            </div>
+            <button class="edit-picture-btn" aria-label="Edit Picture">
+              <i class="fas fa-camera"></i>
+            </button>
+          </div>
+          <div class="profile-info">
+            <div class="name-section">
+              <h1 id="userName">Alex Johnson</h1>
+              <button class="edit-icon-btn" aria-label="Edit Name">
+                <i class="fas fa-edit"></i>
+              </button>
+            </div>
+            <p class="tagline" id="userTagline">Future Software Engineer</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personal Stats Section -->
+      <div class="stats-section">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-bullseye"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">85%</div>
+            <div class="stat-label">Focus Score</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-fire"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">12</div>
+            <div class="stat-label">Day Streak</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">68%</div>
+            <div class="stat-label">Career Progress</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">8</div>
+            <div class="stat-label">Tasks Today</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Goals Section -->
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-bullseye"></i> Current Goals
+          </h2>
+          <button class="edit-btn"><i class="fas fa-edit"></i> Edit</button>
+        </div>
+        <div class="goals-list">
+          <div class="goal-item">
+            <span class="goal-icon">🎯</span>
+            <div class="goal-content">
+              <span class="goal-type">Career Goal:</span>
+              <span class="goal-text">Software Engineering</span>
+            </div>
+          </div>
+          <div class="goal-item">
+            <span class="goal-icon">🎯</span>
+            <div class="goal-content">
+              <span class="goal-type">Study Goal:</span>
+              <span class="goal-text">Improve Math & Algorithms</span>
+            </div>
+          </div>
+          <div class="goal-item">
+            <span class="goal-icon">🎯</span>
+            <div class="goal-content">
+              <span class="goal-type">Skill Goal:</span>
+              <span class="goal-text">Learn C++ & HTML</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Insights Section -->
+      <div class="section-container ai-insights">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-brain"></i> AI Insights Today
+          </h2>
+        </div>
+        <div class="insights-list">
+          <div class="insight-item">
+            <div class="insight-icon">
+              <i class="fas fa-lightbulb"></i>
+            </div>
+            <p class="insight-text">
+              You seem most focused in the morning—10:00 is optimal study time.
+            </p>
+          </div>
+          <div class="insight-item">
+            <div class="insight-icon">
+              <i class="fas fa-compass"></i>
+            </div>
+            <p class="insight-text">
+              Based on your interests, consider IT, Engineering & Data Science.
+            </p>
+          </div>
+          <div class="insight-item">
+            <div class="insight-icon">
+              <i class="fas fa-trophy"></i>
+            </div>
+            <p class="insight-text">
+              You're 32% more productive when breaking tasks into 25-minute
+              intervals.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Career Path Progress Section -->
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-road"></i> Career Path Progress
+          </h2>
+        </div>
+        <div class="progress-section">
+          <div class="progress-info">
+            <span class="progress-label">Career Orientation Progress</span>
+            <span class="progress-percentage">68%</span>
+          </div>
+          <div class="progress-bar-wrapper">
+            <div class="progress-bar-fill" style="width: 68%"></div>
+          </div>
+          <div class="next-step">
+            <i class="fas fa-arrow-right"></i>
+            <span>Next Step: Explore universities in your field</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Study Plan Shortcut Section -->
+      <div class="section-container study-plan">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-book-open"></i> Today's Study Plan
+          </h2>
+        </div>
+        <div class="study-content">
+          <div class="study-stats">
+            <div class="study-stat">
+              <i class="fas fa-clock"></i>
+              <div>
+                <div class="study-stat-value">4h 30m</div>
+                <div class="study-stat-label">Goal</div>
+              </div>
+            </div>
+            <div class="study-divider"></div>
+            <div class="study-stat">
+              <i class="fas fa-check-double"></i>
+              <div>
+                <div class="study-stat-value">2h 45m</div>
+                <div class="study-stat-label">Completed</div>
+              </div>
+            </div>
+          </div>
+          <button class="continue-btn">
+            <i class="fas fa-play"></i> Continue Study Plan
+          </button>
+        </div>
+      </div>
+
+      <!-- Achievements Section -->
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-award"></i> Achievements
+          </h2>
+        </div>
+        <div class="achievements-grid">
+          <div class="achievement-badge">
+            <div class="badge-icon">⭐</div>
+            <div class="badge-name">First Quiz</div>
+            <div class="badge-desc">Completed Career Assessment</div>
+          </div>
+          <div class="achievement-badge">
+            <div class="badge-icon">🔥</div>
+            <div class="badge-name">7-Day Streak</div>
+            <div class="badge-desc">Study Consistency</div>
+          </div>
+          <div class="achievement-badge">
+            <div class="badge-icon">🎯</div>
+            <div class="badge-name">Path Defined</div>
+            <div class="badge-desc">Set Career Goals</div>
+          </div>
+          <div class="achievement-badge locked">
+            <div class="badge-icon">🏆</div>
+            <div class="badge-name">30-Day Master</div>
+            <div class="badge-desc">Locked</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Settings Section -->
+      <div class="section-container settings-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-cog"></i> Account Settings
+          </h2>
+        </div>
+        <div class="settings-list">
+          <a href="#" class="setting-item">
+            <i class="fas fa-user-edit"></i>
+            <span>Edit Profile</span>
+            <i class="fas fa-chevron-right"></i>
+          </a>
+          <a href="#" class="setting-item">
+            <i class="fas fa-bell"></i>
+            <span>Notification Settings</span>
+            <i class="fas fa-chevron-right"></i>
+          </a>
+          <a href="#" class="setting-item">
+            <i class="fas fa-palette"></i>
+            <span>Theme Toggle</span>
+            <i class="fas fa-chevron-right"></i>
+          </a>
+          <a href="#" class="setting-item">
+            <i class="fas fa-info-circle"></i>
+            <span>About the App</span>
+            <i class="fas fa-chevron-right"></i>
+          </a>
+          <a href="#" class="setting-item logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Log Out</span>
+            <i class="fas fa-chevron-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/profile.js"></script>
+  </body>
+</html>

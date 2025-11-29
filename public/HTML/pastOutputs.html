@@ -3,56 +3,111 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Daily Plan – Part 1</title>
+    <title>Past Outputs - Path AI</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/pastOutputs.css" />
+    <link rel="stylesheet" href="../css/output.css" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap"
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;600&family=DM+Sans:wght@100;200;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link href="../CSS/past.css" rel="stylesheet" />
   </head>
   <body>
-    <div class="top-gradient-bg"></div>
-
-    <div class="navbar">
+    <div class="top-nav">
       <div class="nav-left">
-        <button
-          class="circle-btn"
-          type="button"
-          onclick="location.href='../index.html'"
-          aria-label="Home"
-        ></button>
-        <button class="pfp-btn" onclick="location.href='profile.html'">
-          <img src="https://via.placeholder.com/150" alt="Profile" />
-        </button>
+        <a href="profile.html" class="profile-btn" aria-label="Profile">
+          <div class="profile-icon" aria-hidden="true"></div>
+        </a>
       </div>
       <div class="nav-right">
-        <button class="icon-btn">⚙️</button>
-        <button class="icon-btn">🔔</button>
+        <a href="#notifications" class="icon-circle" aria-label="Notifications"
+          ><i class="fas fa-bell"></i
+        ></a>
+        <a href="#settings" class="icon-circle" aria-label="Settings"
+          ><i class="fas fa-cog"></i
+        ></a>
       </div>
     </div>
 
-    <div class="main-nav">
-      <a href="test.html" class="active-main">Take a test</a>
-      <a href="assistant.html" class="inactive-main">Study Assistant</a>
-    </div>
+    <button
+      class="toggle-btn"
+      onclick="toggleNav()"
+      id="toggleBtn"
+      aria-label="Toggle sidebar"
+    >
+      <span id="arrowIcon" aria-hidden="true">></span>
+    </button>
 
-    <div class="sub-nav">
-      <a href="test.html" class="inactive-sub">Test</a>
-      <a href="pastOutputs.html" class="active-sub">Past Outputs</a>
-    </div>
-    <div class="sub-divider"></div>
+    <div id="mySidenav" class="sidenav">
+      <div class="sidebar-content">
+        <a href="../index.html"><i class="fas fa-home"></i>Home</a>
 
-    <!-- TO DO LIST (sample placeholder) -->
-    <div class="outputs-list">
-      <!-- <div class="output-item">
-        <div class="output-time">8:00 AM – 9:00 AM</div>
-        <div class="output-text">Wake up</div>
+        <a
+          href="javascript:void(0)"
+          class="has-submenu"
+          onclick="toggleSubmenu('testSubmenu', this)"
+          ><i class="fas fa-clipboard-list"></i>Take a test</a
+        >
+        <div id="testSubmenu" class="submenu">
+          <a href="test.html">Test</a>
+          <a href="pastOutputs.html">Past Outputs</a>
+        </div>
+
+        <a
+          href="javascript:void(0)"
+          class="has-submenu"
+          onclick="toggleSubmenu('aiSubmenu', this)"
+          ><i class="fas fa-robot"></i>Study Assistant</a
+        >
+        <div id="aiSubmenu" class="submenu">
+          <a href="assistant.html">Assistant</a>
+          <a href="dailyPlan.html">Daily Plans</a>
+        </div>
       </div>
-      <div class="output-item">
-        <div class="output-time">9:00 AM – 10:00 AM</div>
-        <div class="output-text">Study for 1 hour</div>
-      </div> -->
+
+      <div class="sidebar-bottom">
+        <a href="signUp.html"><i class="fas fa-user-plus"></i>Sign Up</a>
+        <a href="../index.html"><i class="fas fa-sign-out-alt"></i>Log Out</a>
+      </div>
     </div>
+
+    <div class="outputs-container">
+      <h1 class="main-heading">Past Outputs</h1>
+      <p class="subtitle">View your previous test results and daily plans</p>
+
+      <!-- Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">All Outputs</button>
+        <button class="filter-tab" data-filter="career">Career Tests</button>
+        <button class="filter-tab" data-filter="daily">Daily Plans</button>
+      </div>
+
+      <!-- Outputs Grid -->
+      <div class="outputs-grid" id="outputsGrid"></div>
+
+      <!-- Empty State (hidden by default) -->
+      <div class="empty-state" id="emptyState" style="display: none">
+        <i class="fas fa-folder-open"></i>
+        <h3>No Outputs Found</h3>
+        <p>
+          You haven't created any outputs yet. Take a career test or create a
+          daily plan to get started!
+        </p>
+        <div class="empty-actions">
+          <a href="test.html" class="action-link">
+            <i class="fas fa-clipboard-list"></i> Take Career Test
+          </a>
+          <a href="dailyPlan.html" class="action-link">
+            <i class="fas fa-calendar-plus"></i> Create Daily Plan
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/past.js"></script>
   </body>
-  <script src="../js/past.js"></script>
 </html>

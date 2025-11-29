@@ -1,8 +1,8 @@
-const socket = new WebSocket("ws://localhost:3000");
+const socket = new WebSocket(`ws://${location.host}`);
 
-const chat = document.getElementById("chat");
+const chat = document.getElementById("chatContainer");
 const sendBtn = document.getElementById("sendBtn");
-const msgInput = document.getElementById("msgInput");
+const msgInput = document.getElementById("messageInput");
 
 socket.onopen = () => {
   console.log("WebSocket connection established.");
@@ -36,6 +36,8 @@ const fillMessages = () => {
       chat.appendChild(botBubble);
     }
   });
+
+  window.scrollTo(0, document.body.scrollHeight);
 };
 fillMessages();
 
@@ -87,3 +89,49 @@ socket.onmessage = (event) => {
     chat.scrollTop = chat.scrollHeight;
   }
 };
+
+//sidebar functionality
+let isOpen = false;
+
+function toggleNav() {
+  const sidebar = document.getElementById("mySidenav");
+  const arrow = document.getElementById("arrowIcon");
+  const toggleBtn = document.getElementById("toggleBtn");
+
+  if (isOpen) {
+    sidebar.style.width = "0";
+    sidebar.classList.remove("active");
+    arrow.textContent = ">";
+    toggleBtn.style.left = "0";
+
+    const submenus = document.querySelectorAll(".submenu");
+    submenus.forEach((submenu) => {
+      submenu.style.display = "none";
+    });
+
+    const hasSubmenuItems = document.querySelectorAll(".has-submenu");
+    hasSubmenuItems.forEach((item) => {
+      item.classList.remove("active");
+    });
+
+    isOpen = false;
+  } else {
+    sidebar.style.width = "250px";
+    sidebar.classList.add("active");
+    arrow.textContent = "<";
+    toggleBtn.style.left = "250px";
+    isOpen = true;
+  }
+}
+
+function toggleSubmenu(submenuId, element) {
+  const submenu = document.getElementById(submenuId);
+
+  if (submenu.style.display === "block") {
+    submenu.style.display = "none";
+    element.classList.remove("active");
+  } else {
+    submenu.style.display = "block";
+    element.classList.add("active");
+  }
+}

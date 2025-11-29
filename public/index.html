@@ -1,48 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Path AI</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=DM+Sans:wght@600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href=" CSS/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
   </head>
   <body>
-    <div class="top-gradient-bg"></div>
-
-    <div class="navbar">
+    <div class="top-nav">
       <div class="nav-left">
-        <button
-          class="circle-btn"
-          type="button"
-          onclick="location.href='index.html'"
-          aria-label="Home"
-        ></button>
-        <button class="pfp-btn" onclick="location.href='profile.html'">
-          <img src="https://via.placeholder.com/150" alt="Profile" />
-        </button>
+        <a href="#" class="profile-btn" aria-label="Profile">
+          <div class="profile-icon" aria-hidden="true"></div>
+          <span
+            class="visually-hidden"
+            style="
+              position: absolute;
+              width: 1px;
+              height: 1px;
+              padding: 0;
+              margin: -1px;
+              overflow: hidden;
+              clip: rect(0 0 0 0);
+              white-space: nowrap;
+              border: 0;
+            "
+            >Profile</span
+          >
+        </a>
       </div>
       <div class="nav-right">
-        <button class="icon-btn">⚙️</button>
-        <button class="icon-btn">🔔</button>
+        <a href="#notifications" class="icon-circle" aria-label="Notifications"
+          ><i class="fas fa-bell" aria-hidden="true"></i
+        ></a>
+        <a href="#settings" class="icon-circle" aria-label="Settings"
+          ><i class="fas fa-cog" aria-hidden="true"></i
+        ></a>
       </div>
     </div>
 
-    <div class="hero">
-      <h1 class="headline">Path AI</h1>
-      <h2 class="subheadline">Discover Your Perfect Career Path</h2>
+    <div class="main-content">
+      <h1 class="main-title">Path AI</h1>
+      <p class="subtitle">Discover the Path to Your Future</p>
     </div>
 
-    <div class="bottom-container">
-      <button class="main-btn" onclick="location.href='HTML/signUp.html'">
+    <div id="mySidenav" class="sidenav">
+      <div class="sidebar-content">
+        <a href="index.html"><i class="fas fa-home"></i>Home</a>
+
+        <a
+          href="javascript:void(0)"
+          class="has-submenu"
+          onclick="toggleSubmenu('testSubmenu', this)"
+          ><i class="fas fa-clipboard-list"></i>Take a test</a
+        >
+        <div id="testSubmenu" class="submenu">
+          <a href="pages/test.html">Test</a>
+          <a href="#">Past Outputs</a>
+        </div>
+
+        <a
+          href="javascript:void(0)"
+          class="has-submenu"
+          onclick="toggleSubmenu('aiSubmenu', this)"
+          ><i class="fas fa-robot"></i>Study Assistant</a
+        >
+        <div id="aiSubmenu" class="submenu">
+          <a href="pages/assistant.html">Assistant</a>
+          <a href="pages/dailyPlan.html">Daily Plans</a>
+        </div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <a href="./HTML/signUp.html"><i class="fas fa-user-plus"></i>Sign Up</a>
+        <a href="index.html"><i class="fas fa-sign-out-alt"></i>Log Out</a>
+      </div>
+    </div>
+
+    <button class="toggle-btn" onclick="toggleNav()" id="toggleBtn">
+      <span id="arrowIcon">></span>
+    </button>
+
+    <div class="bottom-buttons">
+      <button
+        class="auth-btn"
+        onclick="window.location.href='./HTML/signUp.html'"
+      >
         Sign Up
       </button>
-      <button class="main-btn" onclick="location.href='HTML/logIn.html'">
+      <button
+        class="auth-btn"
+        onclick="window.location.href='./HTML/logIn.html'"
+      >
         Log In
       </button>
     </div>
+
+    <script src="scripts/script.js"></script>
   </body>
 </html>
