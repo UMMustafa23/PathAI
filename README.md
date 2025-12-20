@@ -68,8 +68,9 @@
 <h2 id="contributors">Contributors</h2>
     
 
+<p4>👉🏼 Sheniz Ali. 10B . front-end developer | SHIAli23@codingburgas.bg 👈🏼<p4><br>
 <p1>👉🏼 Ulvie Mustafa . 10G . backend developer | UMMustafa23@codingburgas.bg 👈🏼</p1><br>
-<p4>👉🏼 Desislava Peeva. 10B . front-end developer | DVPeeva23@codingburgas.bg 👈🏼<p4><br>
+
 
     
 <h2 id="download">Download</h2>
