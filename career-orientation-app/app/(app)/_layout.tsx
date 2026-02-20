@@ -33,13 +33,13 @@ export default function AppLayout() {
   return (
     <Stack
       screenOptions={{
+        headerShown: true,
+        headerTitle: "",
         headerRight: () =>
           loggedIn ? (
             <TouchableOpacity onPress={() => router.push("/(app)/profile")}>
               <Image
-                source={{
-                  uri: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-                }}
+                source={{ uri: "https://cdn-icons-png.flaticon.com/512/149/149071.png" }}
                 style={{
                   width: 32,
                   height: 32,

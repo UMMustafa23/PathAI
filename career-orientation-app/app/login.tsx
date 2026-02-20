@@ -1,29 +1,22 @@
-import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Input from "./components/Input" ;
+import GradientButton from "./components/GradientButton";
+
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Missing fields", "Email and password are required.");
+      Alert.alert("Missing fields", "Please fill in all fields.");
       return;
     }
 
-    setLoading(true);
     try {
       const res = await fetch("http://172.20.10.4:3000/login", {
         method: "POST",
@@ -32,20 +25,17 @@ export default function Login() {
       });
 
       const data = await res.json();
-      console.log("Login response:", data);
 
       if (res.ok) {
         await AsyncStorage.setItem("user", JSON.stringify(data.user));
         await AsyncStorage.setItem("token", data.token);
-        router.push("./(app)/dashboard");
+
+        router.replace("/(app)/dashboard");
       } else {
         Alert.alert("Login Failed", data.error || "Invalid credentials");
       }
-    } catch (error) {
-      console.log("Network error:", error);
-      Alert.alert("Network Error", "Please check your connection.");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      Alert.alert("Network Error", "Could not connect to server.");
     }
   };
 
@@ -54,34 +44,14 @@ export default function Login() {
       <Text style={styles.title}>Welcome Back</Text>
       <Text style={styles.subtitle}>Log in to continue your journey</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#aaa"
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-      />
+      <Input placeholder="Email" value={email} onChangeText={setEmail} />
+      <Input placeholder="Password" secure value={password} onChangeText={setPassword} />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#aaa"
-        secureTextEntry
-        onChangeText={setPassword}
-        value={password}
-      />
+      <GradientButton title="Log In" onPress={handleLogin} />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? "Logging in..." : "Log In"}</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push("./signup")}>
+      <TouchableOpacity onPress={() => router.push("/signup")}>
         <Text style={styles.link}>Don’t have an account? Sign up</Text>
       </TouchableOpacity>
-
-      {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
     </View>
   );
 }
@@ -89,45 +59,27 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     padding: 30,
-    backgroundColor: "#fff",
+    justifyContent: "center",
+    backgroundColor: "#F7F7FC",
   },
   title: {
     fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 10,
+    fontFamily: "Poppins_700Bold",
     textAlign: "center",
+    marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
-    marginBottom: 30,
+    fontFamily: "Poppins_400Regular",
     textAlign: "center",
-  },
-  input: {
-    backgroundColor: "#f2f2f2",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: "#4a6cf7",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
+    color: "#6B6B6B",
+    marginBottom: 30,
   },
   link: {
     marginTop: 20,
     textAlign: "center",
-    color: "#4a6cf7",
-    fontSize: 16,
+    color: "#6C63FF",
+    fontFamily: "Poppins_600SemiBold",
   },
 });
