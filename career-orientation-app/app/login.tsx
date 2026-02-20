@@ -1,30 +1,51 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Missing fields", "Email and password are required.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await fetch("http://172.26.79.79:3000/login", {
+      const res = await fetch("http://172.20.10.4:3000/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
       console.log("Login response:", data);
 
       if (res.ok) {
-        router.push("./home");
+        await AsyncStorage.setItem("user", JSON.stringify(data.user));
+        await AsyncStorage.setItem("token", data.token);
+        router.push("./dashboard");
       } else {
-        console.log("Login error:", data.error);
+        Alert.alert("Login Failed", data.error || "Invalid credentials");
       }
     } catch (error) {
       console.log("Network error:", error);
+      Alert.alert("Network Error", "Please check your connection.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,6 +59,9 @@ export default function Login() {
         placeholder="Email"
         placeholderTextColor="#aaa"
         onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+        value={email}
       />
 
       <TextInput
@@ -46,15 +70,18 @@ export default function Login() {
         placeholderTextColor="#aaa"
         secureTextEntry
         onChangeText={setPassword}
+        value={password}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Log In</Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? "Logging in..." : "Log In"}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push("./signup")}>
         <Text style={styles.link}>Don’t have an account? Sign up</Text>
       </TouchableOpacity>
+
+      {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
     </View>
   );
 }

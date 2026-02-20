@@ -18,15 +18,37 @@ export default function Quiz() {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
 
-  const handleAnswer = (answer: string) => {
-    setAnswers([...answers, answer]);
+  const saveAssessment = async (finalAnswers: string[]) => {
+    try {
+      const res = await fetch("http://172.26.79.79:3000/saveAssessment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "test@example.com", // временно
+          answers: finalAnswers,
+          score: finalAnswers.length
+        })
+      });
+
+      const data = await res.json();
+      console.log("Saved assessment:", data);
+    } catch (err) {
+      console.log("Error saving assessment:", err);
+    }
+  };
+
+  const handleAnswer = async (answer: string) => {
+    const updatedAnswers = [...answers, answer];
+    setAnswers(updatedAnswers);
 
     if (index + 1 < questions.length) {
       setIndex(index + 1);
     } else {
+      await saveAssessment(updatedAnswers);
+
       router.push({
         pathname: "./results",
-        params: { answers: JSON.stringify([...answers, answer]) },
+        params: { answers: JSON.stringify(updatedAnswers) },
       });
     }
   };

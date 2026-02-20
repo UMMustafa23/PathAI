@@ -1,9 +1,13 @@
 import { useRouter } from "expo-router";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { auth, db } from "../firebaseConfig";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Alert,
+} from "react-native";
 
 export default function Signup() {
   const router = useRouter();
@@ -13,34 +17,45 @@ export default function Signup() {
   const [age, setAge] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
-  try {
-    const res = await fetch("http://172.26.79.79:3000/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username,
-        email,
-        password,
-        country,
-        age
-      })
-    });
-
-    const data = await res.json();
-    console.log("Signup response:", data);
-
-    if (res.ok) {
-      router.push("./quiz");
-    } else {
-      console.log("Signup error:", data.error);
+    if (!username || !email || !password) {
+      Alert.alert("Missing fields", "Username, email and password are required.");
+      return;
     }
-  } catch (err) {
-    console.log("Network error:", err);
-  }
-};
 
+    setLoading(true);
+    try {
+      const res = await fetch("http://172.20.10.4:3000/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          country,
+          age,
+        }),
+      });
+
+      const data = await res.json();
+      console.log("Signup response:", data);
+
+      if (res.ok) {
+        Alert.alert("Success", "Account created successfully!", [
+          { text: "OK", onPress: () => router.push("./login") },
+        ]);
+      } else {
+        Alert.alert("Signup Failed", data.error || "Something went wrong.");
+      }
+    } catch (err) {
+      console.log("Network error:", err);
+      Alert.alert("Network Error", "Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -91,8 +106,8 @@ export default function Signup() {
         onChangeText={setAge}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleSignup}>
-        <Text style={styles.buttonText}>Sign Up</Text>
+      <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? "Signing up..." : "Sign Up"}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push("./login")}>
