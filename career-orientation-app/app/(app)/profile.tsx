@@ -24,7 +24,7 @@ export default function Profile() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch("http://172.26.79.79:3000/updateProfile", {
+      const res = await fetch("http://172.20.10.4:3000/updateProfile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

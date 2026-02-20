@@ -37,7 +37,7 @@ export default function Login() {
       if (res.ok) {
         await AsyncStorage.setItem("user", JSON.stringify(data.user));
         await AsyncStorage.setItem("token", data.token);
-        router.push("./dashboard");
+        router.push("./(app)/dashboard");
       } else {
         Alert.alert("Login Failed", data.error || "Invalid credentials");
       }
