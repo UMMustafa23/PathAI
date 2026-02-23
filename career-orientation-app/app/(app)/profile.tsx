@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { View, Text, TextInput, Button, Alert } from "react-native";
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import GradientButton from "../components/GradientButton";
 
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
@@ -41,38 +42,77 @@ export default function Profile() {
         Alert.alert("Error", data.error);
       }
     } catch (err) {
-      console.log(err);
       Alert.alert("Error", "Failed to update profile");
     }
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 24, fontWeight: "bold" }}>Edit Profile</Text>
+    <View style={styles.container}>
+      <Text style={styles.header}>Profile Settings</Text>
 
-      <Text>Username</Text>
-      <TextInput
-        value={form.username}
-        onChangeText={(text) => setForm({ ...form, username: text })}
-        style={{ borderBottomWidth: 1, marginBottom: 10 }}
-      />
+      <View style={styles.card}>
+        <Text style={styles.label}>Username</Text>
+        <TextInput
+          value={form.username}
+          onChangeText={(text) => setForm({ ...form, username: text })}
+          style={styles.input}
+        />
 
-      <Text>Age</Text>
-      <TextInput
-        value={form.age}
-        onChangeText={(text) => setForm({ ...form, age: text })}
-        keyboardType="numeric"
-        style={{ borderBottomWidth: 1, marginBottom: 10 }}
-      />
+        <Text style={styles.label}>Age</Text>
+        <TextInput
+          value={form.age}
+          onChangeText={(text) => setForm({ ...form, age: text })}
+          keyboardType="numeric"
+          style={styles.input}
+        />
 
-      <Text>Country</Text>
-      <TextInput
-        value={form.country}
-        onChangeText={(text) => setForm({ ...form, country: text })}
-        style={{ borderBottomWidth: 1, marginBottom: 20 }}
-      />
+        <Text style={styles.label}>Country</Text>
+        <TextInput
+          value={form.country}
+          onChangeText={(text) => setForm({ ...form, country: text })}
+          style={styles.input}
+        />
+      </View>
 
-      <Button title="Save Changes" onPress={handleSave} />
+      <GradientButton title="Save Changes" onPress={handleSave} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F4F5FA",
+    padding: 25,
+  },
+  header: {
+    fontSize: 28,
+    fontFamily: "Poppins_700Bold",
+    color: "#1F1F39",
+    marginBottom: 20,
+  },
+  card: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 14,
+    marginBottom: 25,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  label: {
+    fontSize: 14,
+    fontFamily: "Poppins_500Medium",
+    color: "#555",
+    marginBottom: 6,
+  },
+  input: {
+    backgroundColor: "#F2F2F7",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+    fontSize: 15,
+    fontFamily: "Poppins_400Regular",
+  },
+});

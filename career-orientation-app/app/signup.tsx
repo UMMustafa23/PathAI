@@ -3,11 +3,15 @@ import { useState } from "react";
 import {
   StyleSheet,
   Text,
-  TextInput,
-  TouchableOpacity,
   View,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
   Alert,
 } from "react-native";
+import Input from "./components/Input";
+import GradientButton from "./components/GradientButton";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Signup() {
   const router = useRouter();
@@ -40,17 +44,14 @@ export default function Signup() {
       });
 
       const data = await res.json();
-      console.log("Signup response:", data);
 
       if (res.ok) {
-        Alert.alert("Success", "Account created successfully!", [
-          { text: "OK", onPress: () => router.push("./login") },
-        ]);
+        await AsyncStorage.setItem("user", JSON.stringify(data.user));
+        router.replace("/(app)/assessment");
       } else {
         Alert.alert("Signup Failed", data.error || "Something went wrong.");
       }
     } catch (err) {
-      console.log("Network error:", err);
       Alert.alert("Network Error", "Please check your connection.");
     } finally {
       setLoading(false);
@@ -58,83 +59,71 @@ export default function Signup() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create your Pathway AI account</Text>
-      <Text style={styles.subtitle}>We’ll personalize your career journey</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <View style={styles.header}>
+        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.subtitle}>Let’s personalize your career journey</Text>
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        placeholderTextColor="#aaa"
-        value={username}
-        onChangeText={setUsername}
-      />
+      <View style={styles.form}>
+        <Input placeholder="Username" value={username} onChangeText={setUsername} />
+        <Input placeholder="Email" value={email} onChangeText={setEmail} />
+        <Input placeholder="Password" secure value={password} onChangeText={setPassword} />
+        <Input placeholder="Country" value={country} onChangeText={setCountry} />
+        <Input placeholder="Age" value={age} onChangeText={setAge} />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#aaa"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
+        <GradientButton
+          title={loading ? "Signing up..." : "Sign Up"}
+          onPress={handleSignup}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#aaa"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Country"
-        placeholderTextColor="#aaa"
-        value={country}
-        onChangeText={setCountry}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Age"
-        placeholderTextColor="#aaa"
-        keyboardType="numeric"
-        value={age}
-        onChangeText={setAge}
-      />
-
-      <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? "Signing up..." : "Sign Up"}</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push("./login")}>
-        <Text style={styles.link}>Already have an account? Log in</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity onPress={() => router.push("./login")}>
+          <Text style={styles.link}>
+            Already have an account? <Text style={styles.linkBold}>Log in</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 30, backgroundColor: "#fff" },
-  title: { fontSize: 28, fontWeight: "bold", marginBottom: 10, textAlign: "center" },
-  subtitle: { fontSize: 14, color: "#666", marginBottom: 20, textAlign: "center" },
-  input: {
-    backgroundColor: "#f2f2f2",
-    padding: 14,
-    borderRadius: 10,
-    marginBottom: 12,
+  container: {
+    flex: 1,
+    backgroundColor: "#F4F5FA",
+    paddingHorizontal: 28,
+    justifyContent: "center",
+  },
+  header: {
+    marginBottom: 35,
+  },
+  title: {
+    fontSize: 30,
+    fontFamily: "Poppins_700Bold",
+    color: "#1F1F39",
+    textAlign: "center",
+  },
+  subtitle: {
     fontSize: 15,
+    fontFamily: "Poppins_400Regular",
+    color: "#6B6B6B",
+    textAlign: "center",
+    marginTop: 6,
   },
-  button: {
-    backgroundColor: "#4a6cf7",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
+  form: {
+    width: "100%",
   },
-  buttonText: { color: "#fff", fontSize: 17, fontWeight: "600" },
-  link: { marginTop: 18, textAlign: "center", color: "#4a6cf7", fontSize: 15 },
+  link: {
+    marginTop: 20,
+    textAlign: "center",
+    color: "#6B6B6B",
+    fontFamily: "Poppins_400Regular",
+  },
+  linkBold: {
+    color: "#6C63FF",
+    fontFamily: "Poppins_600SemiBold",
+  },
 });

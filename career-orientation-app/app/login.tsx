@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Input from "./components/Input" ;
+import Input from "./components/Input";
 import GradientButton from "./components/GradientButton";
-
 
 export default function Login() {
   const router = useRouter();
@@ -13,7 +12,7 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Missing fields", "Please fill in all fields.");
+      alert("Please fill in all fields.");
       return;
     }
 
@@ -29,56 +28,74 @@ export default function Login() {
       if (res.ok) {
         await AsyncStorage.setItem("user", JSON.stringify(data.user));
         await AsyncStorage.setItem("token", data.token);
-
         router.replace("/(app)/dashboard");
       } else {
-        Alert.alert("Login Failed", data.error || "Invalid credentials");
+        alert(data.error || "Invalid credentials");
       }
     } catch (err) {
-      Alert.alert("Network Error", "Could not connect to server.");
+      alert("Network error. Try again later.");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back</Text>
-      <Text style={styles.subtitle}>Log in to continue your journey</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <View style={styles.header}>
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subtitle}>Log in to continue your career journey</Text>
+      </View>
 
-      <Input placeholder="Email" value={email} onChangeText={setEmail} />
-      <Input placeholder="Password" secure value={password} onChangeText={setPassword} />
+      <View style={styles.form}>
+        <Input placeholder="Email" value={email} onChangeText={setEmail} />
+        <Input placeholder="Password" secure value={password} onChangeText={setPassword} />
 
-      <GradientButton title="Log In" onPress={handleLogin} />
+        <GradientButton title="Log In" onPress={handleLogin} />
 
-      <TouchableOpacity onPress={() => router.push("/signup")}>
-        <Text style={styles.link}>Don’t have an account? Sign up</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity onPress={() => router.push("/signup")}>
+          <Text style={styles.link}>
+            Don’t have an account? <Text style={styles.linkBold}>Sign up</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 30,
+    backgroundColor: "#F4F5FA",
+    paddingHorizontal: 28,
     justifyContent: "center",
-    backgroundColor: "#F7F7FC",
+  },
+  header: {
+    marginBottom: 40,
   },
   title: {
     fontSize: 32,
     fontFamily: "Poppins_700Bold",
+    color: "#1F1F39",
     textAlign: "center",
-    marginBottom: 10,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: "Poppins_400Regular",
-    textAlign: "center",
     color: "#6B6B6B",
-    marginBottom: 30,
+    textAlign: "center",
+    marginTop: 6,
+  },
+  form: {
+    width: "100%",
   },
   link: {
     marginTop: 20,
     textAlign: "center",
+    color: "#6B6B6B",
+    fontFamily: "Poppins_400Regular",
+  },
+  linkBold: {
     color: "#6C63FF",
     fontFamily: "Poppins_600SemiBold",
   },

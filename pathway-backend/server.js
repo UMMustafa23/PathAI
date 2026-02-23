@@ -20,10 +20,8 @@ async function startServer() {
 
     const db = client.db("pathway");
     const users = db.collection("users");
-    const assessments = db.collection("assessments");
 
     app.post("/signup", async (req, res) => {
-      console.log("SIGNUP HIT");
       try {
         const { username, email, password, country, age } = req.body;
 
@@ -46,13 +44,11 @@ async function startServer() {
           age,
           createdAt: new Date(),
           assessmentCompleted: false,
-          interestsHistory: [],
-          plannerTasks: [],
         };
 
         await users.insertOne(user);
 
-        res.json({ message: "User created successfully" });
+        res.json({ message: "User created successfully", user });
       } catch (err) {
         console.error("Signup error:", err);
         res.status(500).json({ error: "Signup failed" });
@@ -86,69 +82,88 @@ async function startServer() {
       }
     });
 
-    app.post("/saveAssessment", async (req, res) => {
+    app.get("/questions", async (req, res) => {
       try {
-        const { email, answers, score } = req.body;
-
-        if (!email || !answers) {
-          return res.status(400).json({ error: "Missing data" });
-        }
-
-        const assessment = {
-          email,
-          answers,
-          score,
-          createdAt: new Date(),
-        };
-
-        await assessments.insertOne(assessment);
-
-        res.json({ message: "Assessment saved successfully" });
-      } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: "Failed to save assessment" });
-      }
-    });
-
-    app.get("/getProfile", async (req, res) => {
-      try {
-        const email = req.query.email;
-        if (!email) return res.status(400).json({ error: "Missing email" });
-
-        const user = await users.findOne({ email });
-        const userAssessments = await assessments
-          .find({ email })
-          .sort({ createdAt: -1 })
+        const questions = await db
+          .collection("questions")
+          .find()
+          .sort({ id: 1 })
           .toArray();
 
-        res.json({
-          user,
-          assessments: userAssessments,
-        });
+        res.json({ questions });
       } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: "Failed to fetch profile" });
+        res.status(500).json({ error: "Failed to load questions" });
       }
     });
-
-    app.post("/updateProfile", async (req, res) => {
+    app.post("/scoreAssessment", async (req, res) => {
       try {
-        const { email, updates } = req.body;
-        if (!email || !updates) {
-          return res.status(400).json({ error: "Missing data" });
-        }
+        const { answers } = req.body;
 
-        await users.updateOne({ email }, { $set: updates });
-        const updatedUser = await users.findOne({ email });
+        const traits = {
+          Extraversion: 0,
+          Agreeableness: 0,
+          Conscientiousness: 0,
+          Neuroticism: 0,
+          Openness: 0,
+        };
 
-        res.json({ message: "Profile updated", user: updatedUser });
+        const questions = await db.collection("questions").find().toArray();
+
+        questions.forEach((q, i) => {
+          const value = answers[i];
+
+          if (q.reverse) {
+            traits[q.trait] += 6 - value;
+          } else {
+            traits[q.trait] += value;
+          }
+        });
+
+        res.json({ traits });
       } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: "Failed to update profile" });
+        console.error("Scoring error:", err);
+        res.status(500).json({ error: "Scoring failed" });
       }
     });
 
-    // START SERVER
+    app.post("/saveResults", async (req, res) => {
+      try {
+        const { email, traits } = req.body;
+
+        console.log("Saving results for:", email);
+        
+        await db.collection("results").updateOne(
+          { email },
+          { $set: { traits, updatedAt: new Date() } },
+          { upsert: true }
+        );
+
+        await users.updateOne(
+          { email },
+          { $set: { assessmentCompleted: true } }
+        );
+
+        res.json({ success: true });
+      } catch (err) {
+        console.error("Save results error:", err);
+        res.status(500).json({ error: "Failed to save results" });
+      }
+      
+
+    });
+    app.get("/getResults", async (req, res) => {
+      try {
+        const email = req.query.email;
+
+        const result = await db.collection("results").findOne({ email });
+
+        res.json({ traits: result?.traits || null });
+      } catch (err) {
+        console.error("Get results error:", err);
+        res.status(500).json({ error: "Failed to load results" });
+      }
+    });
+
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
