@@ -1,118 +1,171 @@
-import { useEffect, useState } from "react";
-import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import GradientButton from "../components/GradientButton";
+import React from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  SafeAreaView, 
+  TouchableOpacity, 
+  Image, 
+  ScrollView,
+  Dimensions 
+} from 'react-native';
+import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
+import { useRouter, Stack } from 'expo-router';
+
+const { width } = Dimensions.get('window');
 
 export default function Profile() {
-  const [user, setUser] = useState<any>(null);
-  const [form, setForm] = useState({ username: "", age: "", country: "" });
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const stored = await AsyncStorage.getItem("user");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setUser(parsed);
-        setForm({
-          username: parsed.username,
-          age: parsed.age,
-          country: parsed.country,
-        });
-      }
-    };
-    loadUser();
-  }, []);
-
-  const handleSave = async () => {
-    try {
-      const res = await fetch("http://172.20.10.4:3000/updateProfile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: user.email,
-          updates: form,
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        await AsyncStorage.setItem("user", JSON.stringify(data.user));
-        Alert.alert("Profile updated!");
-      } else {
-        Alert.alert("Error", data.error);
-      }
-    } catch (err) {
-      Alert.alert("Error", "Failed to update profile");
-    }
-  };
+  const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Profile Settings</Text>
-
-      <View style={styles.card}>
-        <Text style={styles.label}>Username</Text>
-        <TextInput
-          value={form.username}
-          onChangeText={(text) => setForm({ ...form, username: text })}
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>Age</Text>
-        <TextInput
-          value={form.age}
-          onChangeText={(text) => setForm({ ...form, age: text })}
-          keyboardType="numeric"
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>Country</Text>
-        <TextInput
-          value={form.country}
-          onChangeText={(text) => setForm({ ...form, country: text })}
-          style={styles.input}
-        />
+    <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      {/* Custom Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={28} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <TouchableOpacity style={styles.editButton}>
+          <Feather name="edit-3" size={22} color="white" />
+        </TouchableOpacity>
       </View>
 
-      <GradientButton title="Save Changes" onPress={handleSave} />
-    </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        
+        {/* Profile Avatar Section */}
+        <View style={styles.avatarSection}>
+          <View style={styles.imageContainer}>
+            <Image 
+              source={{ uri: 'https://via.placeholder.com/150' }} 
+              style={styles.avatar} 
+            />
+            <View style={styles.onlineBadge} />
+          </View>
+          <Text style={styles.userName}>Alex Johnson</Text>
+          <Text style={styles.userEmail}>alex.j@design.com</Text>
+        </View>
+
+        {/* Mini Stats Row */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>12</Text>
+            <Text style={styles.statLabel}>Day Streak</Text>
+          </View>
+          <View style={[styles.statBox, styles.statBorder]}>
+            <Text style={styles.statValue}>85%</Text>
+            <Text style={styles.statLabel}>Focus</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>4</Text>
+            <Text style={styles.statLabel}>Badges</Text>
+          </View>
+        </View>
+
+        {/* Menu Sections */}
+        <View style={styles.menuContainer}>
+          <Text style={styles.sectionLabel}>Account Settings</Text>
+          
+          <MenuButton icon="person-outline" label="Personal Information" />
+          <MenuButton icon="notifications-outline" label="Notifications" />
+          <MenuButton icon="shield-checkmark-outline" label="Privacy & Security" />
+          
+          <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Support</Text>
+          <MenuButton icon="help-circle-outline" label="Help Center" />
+          <MenuButton icon="chatbubble-outline" label="Feedback" />
+
+          {/* Logout Button */}
+          <TouchableOpacity 
+            style={styles.logoutButton}
+            onPress={() => router.replace('/login')}
+          >
+            <MaterialIcons name="logout" size={20} color="#FF453A" />
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
+        </View>
+
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
+const MenuButton = ({ icon, label }: { icon: any, label: string }) => (
+  <TouchableOpacity style={styles.menuItem}>
+    <View style={styles.menuLeft}>
+      <View style={styles.iconCircle}>
+        <Ionicons name={icon} size={20} color="#AAA" />
+      </View>
+      <Text style={styles.menuLabel}>{label}</Text>
+    </View>
+    <Ionicons name="chevron-forward" size={18} color="#444" />
+  </TouchableOpacity>
+);
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F4F5FA",
-    padding: 25,
+  container: { flex: 1, backgroundColor: '#000' },
+  header: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: 20, 
+    height: 60 
   },
-  header: {
-    fontSize: 28,
-    fontFamily: "Poppins_700Bold",
-    color: "#1F1F39",
-    marginBottom: 20,
+  backButton: { padding: 5 },
+  headerTitle: { color: 'white', fontSize: 18, fontWeight: '600' },
+  editButton: { padding: 5 },
+  scrollContent: { paddingBottom: 40 },
+  avatarSection: { alignItems: 'center', marginTop: 20 },
+  imageContainer: { position: 'relative' },
+  avatar: { width: 110, height: 110, borderRadius: 55, borderWidth: 3, borderColor: '#1C1C1E' },
+  onlineBadge: { 
+    position: 'absolute', 
+    bottom: 5, 
+    right: 5, 
+    width: 20, 
+    height: 20, 
+    borderRadius: 10, 
+    backgroundColor: '#34C759', 
+    borderWidth: 3, 
+    borderColor: '#000' 
   },
-  card: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 14,
-    marginBottom: 25,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+  userName: { color: 'white', fontSize: 24, fontWeight: 'bold', marginTop: 15 },
+  userEmail: { color: '#8E8E93', fontSize: 14, marginTop: 4 },
+  statsRow: { 
+    flexDirection: 'row', 
+    backgroundColor: '#161618', 
+    marginHorizontal: 20, 
+    marginTop: 30, 
+    borderRadius: 20, 
+    paddingVertical: 20 
   },
-  label: {
-    fontSize: 14,
-    fontFamily: "Poppins_500Medium",
-    color: "#555",
-    marginBottom: 6,
+  statBox: { flex: 1, alignItems: 'center' },
+  statBorder: { borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#2C2C2E' },
+  statValue: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  statLabel: { color: '#8E8E93', fontSize: 12, marginTop: 4 },
+  menuContainer: { marginTop: 30, paddingHorizontal: 20 },
+  sectionLabel: { color: '#444', fontSize: 13, fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 10, marginLeft: 5 },
+  menuItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    backgroundColor: '#161618', 
+    padding: 16, 
+    borderRadius: 16, 
+    marginBottom: 10 
   },
-  input: {
-    backgroundColor: "#F2F2F7",
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 15,
-    fontSize: 15,
-    fontFamily: "Poppins_400Regular",
+  menuLeft: { flexDirection: 'row', alignItems: 'center' },
+  iconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#242426', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  menuLabel: { color: 'white', fontSize: 16, fontWeight: '500' },
+  logoutButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginTop: 30, 
+    padding: 16, 
+    borderRadius: 16, 
+    borderWidth: 1, 
+    borderColor: '#331111' 
   },
+  logoutText: { color: '#FF453A', fontSize: 16, fontWeight: 'bold', marginLeft: 10 }
 });
