@@ -16,19 +16,13 @@ const { width } = Dimensions.get('window');
 export default function Dashboard() {
   const router = useRouter();
 
-  // 1. Mood State
-  // 0 = Happy, 1 = Neutral, 2 = Sad
+  // Mood State: 0 = Happy, 1 = Neutral, 2 = Sad
   const [moodIndex, setMoodIndex] = useState(0);
-
   const moods = [
-    { label: 'Great', color: '#FFFFFF', mouthStyle: styles.mouthHappy },
-    { label: 'Okay', color: '#FFFFFF', mouthStyle: styles.mouthNeutral },
-    { label: 'Rough', color: '#FFFFFF', mouthStyle: styles.mouthSad },
+    { label: 'Great', mouthStyle: styles.mouthHappy },
+    { label: 'Okay', mouthStyle: styles.mouthNeutral },
+    { label: 'Rough', mouthStyle: styles.mouthSad },
   ];
-
-  const cycleMood = () => {
-    setMoodIndex((prev) => (prev + 1) % moods.length);
-  };
 
   // Task State
   const [tasks, setTasks] = useState([
@@ -55,27 +49,36 @@ export default function Dashboard() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Header */}
+        {/* Header with Chatbot Link */}
         <View style={styles.header}>
           <Text style={styles.welcomeText}>Welcome, Name!</Text>
-          <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/profile')}>
-            <Ionicons name="person" size={24} color="white" />
-          </TouchableOpacity>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity 
+              style={styles.iconButton}
+              onPress={() => router.push('/chatbot')}
+            >
+              <MaterialCommunityIcons name="chat-processing-outline" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.iconButton}
+              onPress={() => router.push('/profile')}
+            >
+              <Ionicons name="person" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Top Feature Cards */}
         <View style={styles.row}>
-          {/* INTERACTIVE MOOD CARD */}
           <TouchableOpacity 
             activeOpacity={0.8} 
             style={[styles.card, styles.halfCard]} 
-            onPress={cycleMood}
+            onPress={() => setMoodIndex((moodIndex + 1) % moods.length)}
           >
-            <Text style={styles.cardHeader}>Mood: {moods[moodIndex].label}</Text>
+            <Text style={styles.cardHeader}>Mood Today</Text>
             <View style={styles.moodFace}>
                <View style={styles.eyesRow}>
-                 <View style={styles.eye} />
-                 <View style={styles.eye} />
+                 <View style={styles.eye} /><View style={styles.eye} />
                </View>
                <View style={[styles.mouthBase, moods[moodIndex].mouthStyle]} />
             </View>
@@ -94,11 +97,14 @@ export default function Dashboard() {
             <Text style={styles.monthLabel}>Feb</Text>
             <Text style={styles.monthLabel}>Mar</Text>
           </View>
+          
+          {/* FIXED: Changed div to View */}
           <View style={styles.gridsRow}>
             <MonthGrid activeDots={[5, 6, 10]} />
             <MonthGrid activeDots={[1, 2, 3, 4, 7, 8]} />
             <MonthGrid activeDots={[19]} />
           </View>
+
           <View style={styles.theoryRow}>
             <View style={styles.progressRing}><Text style={styles.progressNum}>2</Text></View>
             <View style={{ flex: 1, marginLeft: 15 }}>
@@ -125,15 +131,14 @@ export default function Dashboard() {
             </TouchableOpacity>
           ))}
         </View>
-
       </ScrollView>
 
       {/* Bottom Nav */}
       <View style={styles.navBar}>
-        <MaterialCommunityIcons name="view-grid" size={26} color="white" />
-        <Ionicons name="calendar-outline" size={24} color="#444" />
-        <Ionicons name="stats-chart" size={24} color="#444" />
-        <MaterialCommunityIcons name="comment-text-outline" size={24} color="#444" />
+        <TouchableOpacity><MaterialCommunityIcons name="view-grid" size={26} color="white" /></TouchableOpacity>
+        <TouchableOpacity><Ionicons name="calendar-outline" size={24} color="#444" /></TouchableOpacity>
+        <TouchableOpacity><Ionicons name="stats-chart" size={24} color="#444" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/chatbot')}><MaterialCommunityIcons name="comment-text-outline" size={24} color="#444" /></TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -143,24 +148,22 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 120 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 },
-  welcomeText: { color: 'white', fontSize: 32, fontWeight: 'bold' },
-  profileButton: { backgroundColor: '#1C1C1E', padding: 10, borderRadius: 25 },
+  welcomeText: { color: 'white', fontSize: 28, fontWeight: 'bold' },
+  headerButtons: { flexDirection: 'row', gap: 10 },
+  iconButton: { backgroundColor: '#1C1C1E', padding: 10, borderRadius: 25, borderWidth: 1, borderColor: '#333' },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
   card: { backgroundColor: '#161618', borderRadius: 28, padding: 20, marginBottom: 15 },
   halfCard: { width: '48%', height: 160, justifyContent: 'space-between', alignItems: 'center' },
-  cardHeader: { color: 'white', fontSize: 14, fontWeight: '500' },
+  cardHeader: { color: 'white', fontSize: 14 },
   scoreText: { color: 'white', fontSize: 52, fontWeight: 'bold' },
   scoreSub: { color: '#8E8E93', fontSize: 11, textAlign: 'center' },
-  
-  // Interactive Mood Styles
   moodFace: { width: 70, height: 70, borderRadius: 35, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
   eyesRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   eye: { width: 4, height: 4, borderRadius: 2, backgroundColor: 'black' },
   mouthBase: { width: 24, height: 12, borderBottomWidth: 3, borderColor: 'black' },
-  mouthHappy: { borderBottomLeftRadius: 12, borderBottomRightRadius: 12, marginTop: 0 },
-  mouthNeutral: { borderBottomWidth: 3, height: 0, marginTop: 5 },
+  mouthHappy: { borderBottomLeftRadius: 12, borderBottomRightRadius: 12 },
+  mouthNeutral: { height: 0, marginTop: 5 },
   mouthSad: { borderTopWidth: 3, borderBottomWidth: 0, borderTopLeftRadius: 12, borderTopRightRadius: 12, marginTop: 10 },
-  
   calendarHeader: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
   monthLabel: { color: '#8E8E93', fontSize: 14 },
   gridsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
