@@ -21,6 +21,7 @@ export default function AuthScreen() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   
+  // Animation value for the sliding toggle background
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -31,15 +32,21 @@ export default function AuthScreen() {
     }).start();
   }, [isLogin]);
 
+  // Moves the white pill between 'Log In' and 'Sign Up'
   const translateX = slideAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [4, 106], 
   });
 
-  // Navigation Function
+  // Navigation Logic based on your request
   const handleAuth = () => {
-    // replace() is better than push() for login so the user can't go "back" to login
-    router.replace('/dashboard'); 
+    if (isLogin) {
+      // Existing users go to the Dashboard
+      router.replace('/dashboard'); 
+    } else {
+      // New users must complete the Career Assessment first
+      router.replace('/assessment'); 
+    }
   };
 
   return (
@@ -65,7 +72,7 @@ export default function AuthScreen() {
             </View>
           </View>
 
-          {/* Form Container */}
+          {/* Form Fields */}
           <View style={styles.formContainer}>
             {!isLogin && (
               <View style={styles.row}>
@@ -82,19 +89,24 @@ export default function AuthScreen() {
 
             <View style={styles.fullInput}>
               <Text style={styles.label}>E-mail</Text>
-              <TextInput style={styles.input} keyboardType="email-address" autoCapitalize="none" />
+              <TextInput 
+                style={styles.input} 
+                keyboardType="email-address" 
+                autoCapitalize="none"
+                placeholderTextColor="#444" 
+              />
             </View>
 
             <View style={styles.fullInput}>
               <Text style={styles.label}>Password</Text>
-              <TextInput style={styles.input} secureTextEntry />
+              <TextInput style={styles.input} secureTextEntry placeholderTextColor="#444" />
             </View>
 
             {!isLogin && (
               <>
                 <View style={styles.fullInput}>
                   <Text style={styles.label}>Confirm Password</Text>
-                  <TextInput style={styles.input} secureTextEntry />
+                  <TextInput style={styles.input} secureTextEntry placeholderTextColor="#444" />
                 </View>
 
                 <View style={styles.row}>
@@ -123,12 +135,12 @@ export default function AuthScreen() {
 
             {isLogin && (
               <TouchableOpacity onPress={() => setIsLogin(false)}>
-                <Text style={styles.switchLink}>Do not have an account? Go to Sign Up</Text>
+                <Text style={styles.switchLink}>Don’t have an account? Go to Sign Up</Text>
               </TouchableOpacity>
             )}
           </View>
 
-          {/* Main Action Button - Now connects to Dashboard */}
+          {/* Main Action Button */}
           <TouchableOpacity 
             style={styles.mainBtn}
             onPress={handleAuth}
@@ -147,8 +159,23 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   scrollContent: { paddingHorizontal: 30, paddingTop: 60, alignItems: 'center', paddingBottom: 40 },
   toggleWrapper: { marginBottom: 50 },
-  toggleBackground: { flexDirection: 'row', backgroundColor: '#1C1C1E', width: 214, height: 48, borderRadius: 24, padding: 4 },
-  slidingBg: { position: 'absolute', backgroundColor: '#FFF', width: 104, height: 40, borderRadius: 20, top: 4 },
+  toggleBackground: { 
+    flexDirection: 'row', 
+    backgroundColor: '#1C1C1E', 
+    width: 214, 
+    height: 48, 
+    borderRadius: 24, 
+    padding: 4,
+    position: 'relative'
+  },
+  slidingBg: { 
+    position: 'absolute', 
+    backgroundColor: '#FFF', 
+    width: 104, 
+    height: 40, 
+    borderRadius: 20, 
+    top: 4 
+  },
   toggleBtn: { flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1 },
   toggleText: { color: '#8E8E93', fontSize: 14, fontWeight: '600' },
   activeTabText: { color: '#000' },
@@ -157,13 +184,49 @@ const styles = StyleSheet.create({
   halfInput: { width: '48%' },
   fullInput: { width: '100%' },
   label: { color: '#FFF', fontSize: 13, marginBottom: 8, marginLeft: 4 },
-  input: { backgroundColor: '#1C1C1E', color: '#FFF', borderRadius: 12, height: 48, paddingHorizontal: 15 },
+  input: { 
+    backgroundColor: '#1C1C1E', 
+    color: '#FFF', 
+    borderRadius: 12, 
+    height: 48, 
+    paddingHorizontal: 15 
+  },
   switchLink: { color: '#8E8E93', fontSize: 13, marginTop: 10 },
-  genderBox: { flexDirection: 'row', backgroundColor: '#1C1C1E', borderRadius: 12, height: 48, alignItems: 'center', justifyContent: 'space-around' },
+  genderBox: { 
+    flexDirection: 'row', 
+    backgroundColor: '#1C1C1E', 
+    borderRadius: 12, 
+    height: 48, 
+    alignItems: 'center', 
+    justifyContent: 'space-around' 
+  },
   genderText: { color: '#444', fontSize: 12 },
-  genderTextActive: { color: '#FFF', backgroundColor: '#444', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  dropdown: { flexDirection: 'row', backgroundColor: '#1C1C1E', borderRadius: 12, height: 48, alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10 },
+  genderTextActive: { 
+    color: '#FFF', 
+    backgroundColor: '#444', 
+    paddingHorizontal: 8, 
+    paddingVertical: 4, 
+    borderRadius: 8 
+  },
+  dropdown: { 
+    flexDirection: 'row', 
+    backgroundColor: '#1C1C1E', 
+    borderRadius: 12, 
+    height: 48, 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 10 
+  },
   dropdownLabel: { color: '#444', fontSize: 12 },
-  mainBtn: { flexDirection: 'row', backgroundColor: '#FFF', paddingVertical: 14, paddingHorizontal: 35, borderRadius: 25, marginTop: 50, alignItems: 'center', gap: 8 },
+  mainBtn: { 
+    flexDirection: 'row', 
+    backgroundColor: '#FFF', 
+    paddingVertical: 14, 
+    paddingHorizontal: 35, 
+    borderRadius: 25, 
+    marginTop: 50, 
+    alignItems: 'center', 
+    gap: 8 
+  },
   mainBtnText: { color: '#000', fontSize: 16, fontWeight: '700' }
 });

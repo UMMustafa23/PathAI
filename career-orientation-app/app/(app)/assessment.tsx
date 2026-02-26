@@ -1,196 +1,125 @@
-import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import GradientButton from "../components/GradientButton";
+import React, { useState } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  SafeAreaView, 
+  TouchableOpacity 
+} from 'react-native';
+import { useRouter, Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
-const OPTIONS = [
-  { label: "Strongly Disagree", value: 1 },
-  { label: "Disagree", value: 2 },
-  { label: "Neutral", value: 3 },
-  { label: "Agree", value: 4 },
-  { label: "Strongly Agree", value: 5 },
-];
-
-export default function Assessment() {
+export default function CareerAssessment() {
   const router = useRouter();
 
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [answers, setAnswers] = useState<(number | null)[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const questions = [
+    { id: 1, text: "Do you worry about things?" },
+    { id: 2, text: "Fear for the worst." },
+    { id: 3, text: "Am afraid of many things." },
+    { id: 4, text: "Get stressed out easily." }
+  ];
 
-  // Load user
-  useEffect(() => {
-    AsyncStorage.getItem("user").then((u) => {
-      if (u) setUser(JSON.parse(u));
-    });
-  }, []);
+  // Store selections for each question
+  const [answers, setAnswers] = useState<Record<number, number>>({});
 
-  // Load questions from backend
-  useEffect(() => {
-    const loadQuestions = async () => {
-      try {
-        const res = await fetch("http://172.20.10.4:3000/questions");
-        const data = await res.json();
-
-        setQuestions(data.questions);
-        setAnswers(Array(data.questions.length).fill(null));
-      } catch (err) {
-        Alert.alert("Error", "Failed to load questions.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadQuestions();
-  }, []);
-
-  const handleSelect = (index: number, value: number) => {
-    const updated = [...answers];
-    updated[index] = value;
-    setAnswers(updated);
+  const handleSelect = (questionId: number, index: number) => {
+    setAnswers(prev => ({ ...prev, [questionId]: index }));
   };
 
-  const handleSubmit = async () => {
-    if (answers.includes(null)) {
-      Alert.alert("Incomplete", "Please answer all questions.");
-      return;
-    }
-
-    try {
-      // 1️⃣ SCORE ANSWERS
-      const scoreRes = await fetch("http://172.20.10.4:3000/scoreAssessment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
-      });
-
-      const { traits } = await scoreRes.json();
-
-      // 2️⃣ SAVE RESULTS
-      await fetch("http://172.20.10.4:3000/saveResults", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: user.email,
-          traits,
-        }),
-      });
-
-      // 3️⃣ UPDATE LOCAL USER (THIS FIXES THE REDIRECT LOOP)
-      const updatedUser = { ...user, assessmentCompleted: true };
-      await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
-
-      // 4️⃣ GO TO DASHBOARD
-      router.replace("/(app)/dashboard");
-
-    } catch (err) {
-      Alert.alert("Error", "Failed to submit assessment.");
-    }
-  };
-
-  if (loading || !questions.length || !answers.length || !user) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#6C63FF" />
-      </View>
-    );
-  }
+  const isComplete = Object.keys(answers).length === questions.length;
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Career Orientation Assessment</Text>
+    <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      <View style={styles.header}>
+        <Text style={styles.title}>Career assessment</Text>
+      </View>
 
-      {questions.map((q, i) => (
-        <View key={i} style={styles.questionCard}>
-          <Text style={styles.question}>{i + 1}. {q.text}</Text>
-
-          <View style={styles.optionsRow}>
-            {OPTIONS.map((opt) => (
-              <TouchableOpacity
-                key={opt.value}
-                style={[
-                  styles.circle,
-                  answers[i] === opt.value && styles.circleSelected,
-                ]}
-                onPress={() => handleSelect(i, opt.value)}
-              >
-                {answers[i] === opt.value && <View style={styles.innerCircle} />}
-              </TouchableOpacity>
-            ))}
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {questions.map((q) => (
+          <View key={q.id} style={styles.questionCard}>
+            <Text style={styles.questionText}>{q.text}</Text>
+            <View style={styles.iconRow}>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <TouchableOpacity 
+                  key={i} 
+                  style={[
+                    styles.moodCircle, 
+                    answers[q.id] === i && styles.moodCircleActive
+                  ]}
+                  onPress={() => handleSelect(q.id, i)}
+                >
+                  <View style={[
+                    styles.mouth, 
+                    i === 0 && styles.mouthHappy,
+                    i === 1 && styles.mouthSmile,
+                    i === 2 && styles.mouthNeutral,
+                    i === 3 && styles.mouthFrown,
+                    i === 4 && styles.mouthSad,
+                    answers[q.id] === i && styles.mouthActive
+                  ]} />
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
+        ))}
 
-          <View style={styles.labelsRow}>
-            <Text style={styles.label}>Strongly Disagree</Text>
-            <Text style={styles.label}>Strongly Agree</Text>
-          </View>
-        </View>
-      ))}
-
-      <GradientButton title="Submit Assessment" onPress={handleSubmit} />
-    </ScrollView>
+        <TouchableOpacity 
+          style={[styles.finishBtn, !isComplete && styles.finishBtnDisabled]}
+          onPress={() => router.replace('/dashboard')}
+          disabled={!isComplete}
+        >
+          <Text style={styles.finishBtnText}>Finish Assessment</Text>
+          <Ionicons name="checkmark-circle" size={20} color="black" />
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: "#F4F5FA" },
-  loading: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: {
-    fontSize: 26,
-    fontFamily: "Poppins_700Bold",
-    marginBottom: 20,
-    textAlign: "center",
+  container: { flex: 1, backgroundColor: '#0A0A0B' },
+  header: { paddingHorizontal: 25, paddingTop: 20, marginBottom: 20 },
+  title: { color: 'white', fontSize: 32, fontWeight: '600' },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
+  questionCard: { 
+    backgroundColor: '#1C1C1E', 
+    borderRadius: 24, 
+    padding: 24, 
+    marginBottom: 15 
   },
-  questionCard: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 20,
+  questionText: { color: 'white', fontSize: 18, marginBottom: 25 },
+  iconRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 5 },
+  moodCircle: { 
+    width: 44, 
+    height: 44, 
+    borderRadius: 22, 
+    backgroundColor: '#2C2C2E', 
+    justifyContent: 'center', 
+    alignItems: 'center' 
   },
-  question: {
-    fontSize: 16,
-    fontFamily: "Poppins_500Medium",
-    marginBottom: 15,
+  moodCircleActive: { backgroundColor: 'white' },
+  mouth: { width: 18, height: 9, borderWidth: 2, borderColor: '#8E8E93', borderTopWidth: 0 },
+  mouthActive: { borderColor: 'black' },
+  // Mouth Shapes
+  mouthHappy: { borderBottomLeftRadius: 10, borderBottomRightRadius: 10, height: 10 },
+  mouthSmile: { borderBottomLeftRadius: 10, borderBottomRightRadius: 10, height: 6 },
+  mouthNeutral: { height: 0, borderBottomWidth: 2, marginTop: 4 },
+  mouthFrown: { borderTopWidth: 2, borderBottomWidth: 0, borderTopLeftRadius: 10, borderTopRightRadius: 10, height: 6, marginTop: 10 },
+  mouthSad: { borderTopWidth: 2, borderBottomWidth: 0, borderTopLeftRadius: 10, borderTopRightRadius: 10, height: 10, marginTop: 10 },
+  // Button
+  finishBtn: { 
+    flexDirection: 'row', 
+    backgroundColor: 'white', 
+    padding: 18, 
+    borderRadius: 30, 
+    marginTop: 20, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    gap: 10 
   },
-  optionsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  circle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: "#6C63FF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  circleSelected: {
-    backgroundColor: "#6C63FF",
-  },
-  innerCircle: {
-    width: 12,
-    height: 12,
-    backgroundColor: "#fff",
-    borderRadius: 6,
-  },
-  labelsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  label: {
-    fontSize: 12,
-    color: "#777",
-    fontFamily: "Poppins_400Regular",
-  },
+  finishBtnDisabled: { opacity: 0.3 },
+  finishBtnText: { color: 'black', fontSize: 16, fontWeight: '700' }
 });
