@@ -57,7 +57,11 @@ async function startServer() {
     // ================= SIGNUP =================
     app.post("/signup", async (req, res) => {
       try {
+<<<<<<< HEAD
         const { username, email, password, country, age, gender } = req.body;
+=======
+        const { username, email, password, age } = req.body;
+>>>>>>> 5d9be12fccb14fc1e64c3eead11ae224f10c63f5
 
         if (!username || !email || !password) {
           return res.status(400).json({ error: "Missing required fields" });
@@ -74,9 +78,13 @@ async function startServer() {
           username,
           email,
           password: hashed,
+<<<<<<< HEAD
           country: country || null,
           age: age || null,
           gender: gender || null,
+=======
+          age,
+>>>>>>> 5d9be12fccb14fc1e64c3eead11ae224f10c63f5
           createdAt: new Date(),
           assessmentCompleted: false,
         });
@@ -92,6 +100,7 @@ async function startServer() {
     app.post("/login", async (req, res) => {
       try {
         const { email, password } = req.body;
+        console.log("Login attempt for:", email);
 
         const user = await users.findOne({ email });
         if (!user) {

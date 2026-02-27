@@ -19,9 +19,19 @@ import API_URL  from "../constants/api";
 export default function AuthScreen() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
+<<<<<<< HEAD
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+=======
+
+  // form state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Animation value for the sliding toggle background
+>>>>>>> 5d9be12fccb14fc1e64c3eead11ae224f10c63f5
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -37,6 +47,7 @@ export default function AuthScreen() {
     outputRange: [4, 106],
   });
 
+<<<<<<< HEAD
   const handleAuth = async () => {
     if (!email || !password) {
       alert("Please enter email and password");
@@ -61,7 +72,53 @@ await AsyncStorage.setItem("token", data.token);
 router.replace("/assessment");
     } catch (err) {
       alert("Could not connect to server");
+=======
+  // send credentials to server and return parsed json
+  const sendCredentials = async (email: string, password: string) => {
+    try {
+      const endpoint = isLogin ? '/login' : '/signup';
+      const res = await fetch(`http://localhost:3000${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      return await res.json();
+    } catch (err) {
+      console.error('network error', err);
+      return { error: 'Network error' };
+>>>>>>> 5d9be12fccb14fc1e64c3eead11ae224f10c63f5
     }
+  };
+
+  // examine server response for token/user or error
+  const handleResponse = (data: any) => {
+    if (data && data.token && data.user) {
+      // success - navigate accordingly
+      if (isLogin) {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/assessment');
+      }
+    } else if (data && data.error) {
+      setErrorMessage(data.error);
+      console.warn('auth error', data.error);
+    } else {
+      const msg = 'Unexpected server response';
+      setErrorMessage(msg);
+      console.warn(msg, data);
+    }
+  };
+
+  const handleAuth = async () => {
+    // basic validation
+    if (!email.trim() || !password) {
+      setErrorMessage('Email and password are required');
+      return;
+    }
+    setErrorMessage('');
+
+    const result = await sendCredentials(email, password);
+    handleResponse(result);
   };
 
   return (
@@ -117,7 +174,11 @@ router.replace("/assessment");
                 style={styles.input}
                 keyboardType="email-address"
                 autoCapitalize="none"
+<<<<<<< HEAD
                 placeholderTextColor="#444"
+=======
+                placeholderTextColor="#444" 
+>>>>>>> 5d9be12fccb14fc1e64c3eead11ae224f10c63f5
                 value={email}
                 onChangeText={setEmail}
               />
