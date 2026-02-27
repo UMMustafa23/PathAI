@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import axios from "axios";
 
 dotenv.config();
 
@@ -11,19 +12,52 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const PORT = process.env.PORT || 3000;
+
+if (!process.env.MONGO_URI) {
+  console.error("❌ MONGO_URI missing in .env");
+  process.exit(1);
+}
+
 const client = new MongoClient(process.env.MONGO_URI);
 
+// ================= AUTH MIDDLEWARE =================
+function authenticate(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "dev_secret"
+    );
+
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+}
+
+// ================= START SERVER =================
 async function startServer() {
   try {
     await client.connect();
-    console.log("MongoDB connected");
+    console.log("✅ MongoDB connected");
 
     const db = client.db("pathway");
     const users = db.collection("users");
+    const questionsCollection = db.collection("questions");
 
+    // ================= SIGNUP =================
     app.post("/signup", async (req, res) => {
       try {
-        const { username, email, password, country, age } = req.body;
+        const { username, email, password, country, age, gender } = req.body;
 
         if (!username || !email || !password) {
           return res.status(400).json({ error: "Missing required fields" });
@@ -36,140 +70,172 @@ async function startServer() {
 
         const hashed = await bcrypt.hash(password, 10);
 
-        const user = {
+        await users.insertOne({
           username,
           email,
           password: hashed,
-          country,
-          age,
+          country: country || null,
+          age: age || null,
+          gender: gender || null,
           createdAt: new Date(),
           assessmentCompleted: false,
-        };
+        });
 
-        await users.insertOne(user);
-
-        res.json({ message: "User created successfully", user });
+        res.json({ message: "User created successfully" });
       } catch (err) {
         console.error("Signup error:", err);
         res.status(500).json({ error: "Signup failed" });
       }
     });
 
+    // ================= LOGIN =================
     app.post("/login", async (req, res) => {
       try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-          return res.status(400).json({ error: "Missing email or password" });
+        const user = await users.findOne({ email });
+        if (!user) {
+          return res.status(400).json({ error: "User not found" });
         }
 
-        const user = await users.findOne({ email });
-        if (!user) return res.status(400).json({ error: "User not found" });
-
         const match = await bcrypt.compare(password, user.password);
-        if (!match) return res.status(400).json({ error: "Wrong password" });
+        if (!match) {
+          return res.status(400).json({ error: "Wrong password" });
+        }
 
         const token = jwt.sign(
-          { email },
+          { email: user.email },
           process.env.JWT_SECRET || "dev_secret",
           { expiresIn: "7d" }
         );
 
-        res.json({ token, user });
+        const { password: _, ...safeUser } = user;
+
+        res.json({ token, user: safeUser });
       } catch (err) {
         console.error("Login error:", err);
         res.status(500).json({ error: "Login failed" });
       }
     });
 
-    app.get("/questions", async (req, res) => {
+    // ================= GET QUESTIONS =================
+    app.get("/questions", authenticate, async (req, res) => {
       try {
-        const questions = await db
-          .collection("questions")
-          .find()
-          .sort({ id: 1 })
-          .toArray();
-
-        res.json({ questions });
+        const questions = await questionsCollection.find({}).toArray();
+        res.json(questions);
       } catch (err) {
-        res.status(500).json({ error: "Failed to load questions" });
+        res.status(500).json({ error: "Failed to fetch questions" });
       }
     });
-    app.post("/scoreAssessment", async (req, res) => {
+
+    // ================= SAVE ASSESSMENT + AI =================
+    app.post("/assessment", authenticate, async (req, res) => {
       try {
         const { answers } = req.body;
 
-        const traits = {
-          Extraversion: 0,
-          Agreeableness: 0,
-          Conscientiousness: 0,
-          Neuroticism: 0,
-          Openness: 0,
-        };
+        if (!answers) {
+          return res.status(400).json({ error: "No answers provided" });
+        }
 
-        const questions = await db.collection("questions").find().toArray();
+        if (!process.env.DEEPSEEK_API_KEY) {
+          return res.status(500).json({ error: "DeepSeek API key missing" });
+        }
 
-        questions.forEach((q, i) => {
-          const value = answers[i];
+        const prompt = `
+Return ONLY valid raw JSON.
+Do NOT include markdown or explanation.
 
-          if (q.reverse) {
-            traits[q.trait] += 6 - value;
-          } else {
-            traits[q.trait] += value;
+Based on these assessment answers:
+${JSON.stringify(answers)}
+
+Return:
+{
+  "summary": "text",
+  "tags": ["tag1","tag2"],
+  "careers": [
+    { "title": "Career Name", "match": "95%" }
+  ],
+  "universities": [
+    { "name": "University Name", "location": "Country" }
+  ]
+}
+`;
+
+        const aiResponse = await axios.post(
+          "https://api.deepseek.com/v1/chat/completions",
+          {
+            model: "deepseek-chat",
+            messages: [{ role: "user", content: prompt }],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            timeout: 20000,
           }
-        });
-
-        res.json({ traits });
-      } catch (err) {
-        console.error("Scoring error:", err);
-        res.status(500).json({ error: "Scoring failed" });
-      }
-    });
-
-    app.post("/saveResults", async (req, res) => {
-      try {
-        const { email, traits } = req.body;
-
-        console.log("Saving results for:", email);
-        
-        await db.collection("results").updateOne(
-          { email },
-          { $set: { traits, updatedAt: new Date() } },
-          { upsert: true }
         );
+
+        const aiContent = aiResponse.data.choices[0].message.content;
+
+        let cleaned = aiContent
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
+
+        const match = cleaned.match(/\{[\s\S]*\}/);
+
+        if (!match) {
+          console.error("AI RAW RESPONSE:", aiContent);
+          return res.status(500).json({ error: "AI returned invalid format" });
+        }
+
+        let parsed = JSON.parse(match[0]);
 
         await users.updateOne(
-          { email },
-          { $set: { assessmentCompleted: true } }
+          { email: req.user.email },
+          {
+            $set: {
+              assessmentAnswers: answers,
+              assessmentCompleted: true,
+              assessmentDate: new Date(),
+              assessmentResult: parsed,
+            },
+          }
         );
 
-        res.json({ success: true });
-      } catch (err) {
-        console.error("Save results error:", err);
-        res.status(500).json({ error: "Failed to save results" });
-      }
-      
+        console.log("✅ Assessment saved for:", req.user.email);
 
+        // 🔥 THIS WAS MISSING BEFORE
+        res.json(parsed);
+
+      } catch (err) {
+        console.error("Assessment error:", err.response?.data || err.message);
+        res.status(500).json({ error: "Failed to process assessment" });
+      }
     });
-    app.get("/getResults", async (req, res) => {
+
+    // ================= GET RESULTS =================
+    app.get("/results", authenticate, async (req, res) => {
       try {
-        const email = req.query.email;
+        const user = await users.findOne({ email: req.user.email });
 
-        const result = await db.collection("results").findOne({ email });
+        if (!user || !user.assessmentResult) {
+          return res.status(404).json({ error: "No results found" });
+        }
 
-        res.json({ traits: result?.traits || null });
+        res.json(user.assessmentResult);
       } catch (err) {
-        console.error("Get results error:", err);
-        res.status(500).json({ error: "Failed to load results" });
+        res.status(500).json({ error: "Failed to fetch results" });
       }
     });
 
-    const PORT = process.env.PORT || 3000;
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
+
   } catch (err) {
-    console.error("Failed to connect to MongoDB:", err);
+    console.error("❌ MongoDB connection failed:", err);
     process.exit(1);
   }
 }

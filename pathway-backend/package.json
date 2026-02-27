@@ -4,6 +4,8 @@
   "main": "server.js",
   "type": "module",
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^3.0.1",
+    "axios": "^1.13.5",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
@@ -12,5 +14,3 @@
     "mongodb": "^6.0.0"
   }
 }
-
-
