@@ -20,7 +20,12 @@ const { width } = Dimensions.get('window');
 export default function AuthScreen() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
-  
+
+  // form state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
   // Animation value for the sliding toggle background
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -38,15 +43,51 @@ export default function AuthScreen() {
     outputRange: [4, 106], 
   });
 
-  // Navigation Logic based on your request
-  const handleAuth = () => {
-    if (isLogin) {
-      // Existing users go to the Dashboard
-      router.replace('/dashboard'); 
-    } else {
-      // New users must complete the Career Assessment first
-      router.replace('/assessment'); 
+  // send credentials to server and return parsed json
+  const sendCredentials = async (email: string, password: string) => {
+    try {
+      const endpoint = isLogin ? '/login' : '/signup';
+      const res = await fetch(`http://localhost:3000${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      return await res.json();
+    } catch (err) {
+      console.error('network error', err);
+      return { error: 'Network error' };
     }
+  };
+
+  // examine server response for token/user or error
+  const handleResponse = (data: any) => {
+    if (data && data.token && data.user) {
+      // success - navigate accordingly
+      if (isLogin) {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/assessment');
+      }
+    } else if (data && data.error) {
+      setErrorMessage(data.error);
+      console.warn('auth error', data.error);
+    } else {
+      const msg = 'Unexpected server response';
+      setErrorMessage(msg);
+      console.warn(msg, data);
+    }
+  };
+
+  const handleAuth = async () => {
+    // basic validation
+    if (!email.trim() || !password) {
+      setErrorMessage('Email and password are required');
+      return;
+    }
+    setErrorMessage('');
+
+    const result = await sendCredentials(email, password);
+    handleResponse(result);
   };
 
   return (
@@ -94,12 +135,20 @@ export default function AuthScreen() {
                 keyboardType="email-address" 
                 autoCapitalize="none"
                 placeholderTextColor="#444" 
+                value={email}
+                onChangeText={setEmail}
               />
             </View>
 
             <View style={styles.fullInput}>
               <Text style={styles.label}>Password</Text>
-              <TextInput style={styles.input} secureTextEntry placeholderTextColor="#444" />
+              <TextInput
+                style={styles.input}
+                secureTextEntry
+                placeholderTextColor="#444"
+                value={password}
+                onChangeText={setPassword}
+              />
             </View>
 
             {!isLogin && (

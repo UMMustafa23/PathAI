@@ -23,7 +23,7 @@ async function startServer() {
 
     app.post("/signup", async (req, res) => {
       try {
-        const { username, email, password, country, age } = req.body;
+        const { username, email, password, age } = req.body;
 
         if (!username || !email || !password) {
           return res.status(400).json({ error: "Missing required fields" });
@@ -40,7 +40,6 @@ async function startServer() {
           username,
           email,
           password: hashed,
-          country,
           age,
           createdAt: new Date(),
           assessmentCompleted: false,
@@ -58,6 +57,7 @@ async function startServer() {
     app.post("/login", async (req, res) => {
       try {
         const { email, password } = req.body;
+        console.log("Login attempt for:", email);
 
         if (!email || !password) {
           return res.status(400).json({ error: "Missing email or password" });
