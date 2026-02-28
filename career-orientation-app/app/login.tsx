@@ -60,7 +60,11 @@ export default function AuthScreen() {
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
       await AsyncStorage.setItem("token", data.token);
 
-      router.replace("/dashboard");
+      if (data.user.assessmentCompleted) {
+        router.replace("/dashboard");
+      } else {
+        router.replace("/assessment");
+      }
     } catch (err) {
       alert("Could not connect to server");
     }

@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { MongoClient } from "mongodb";
+import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import axios from "axios";
@@ -19,7 +19,32 @@ if (!process.env.MONGO_URI) {
   process.exit(1);
 }
 
-const client = new MongoClient(process.env.MONGO_URI);
+// ================= MONGOOSE SCHEMAS =================
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  country: { type: String, default: null },
+  age: { type: Number, default: null },
+  gender: { type: String, default: null },
+  createdAt: { type: Date, default: Date.now },
+  assessmentCompleted: { type: Boolean, default: false },
+  assessmentAnswers: { type: mongoose.Schema.Types.Mixed, default: null },
+  assessmentDate: { type: Date, default: null },
+  assessmentResult: { type: mongoose.Schema.Types.Mixed, default: null },
+  bigFiveScores: { type: mongoose.Schema.Types.Mixed, default: null },
+  selectedCareer: { type: mongoose.Schema.Types.Mixed, default: null },
+  selectedUniversity: { type: mongoose.Schema.Types.Mixed, default: null },
+});
+
+const questionSchema = new mongoose.Schema({
+  question: { type: String, required: true },
+  domain:   { type: String, default: null },
+  options:  { type: [String], default: [] },
+});
+
+const User = mongoose.model("User", userSchema);
+const Question = mongoose.model("Question", questionSchema);
 
 // ================= AUTH MIDDLEWARE =================
 function authenticate(req, res, next) {
@@ -47,12 +72,8 @@ function authenticate(req, res, next) {
 // ================= START SERVER =================
 async function startServer() {
   try {
-    await client.connect();
+    await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ MongoDB connected");
-
-    const db = client.db("pathway");
-    const users = db.collection("users");
-    const questionsCollection = db.collection("questions");
 
     // ================= SIGNUP =================
     app.post("/signup", async (req, res) => {
@@ -63,21 +84,20 @@ async function startServer() {
           return res.status(400).json({ error: "Missing required fields" });
         }
 
-        const existing = await users.findOne({ email });
+        const existing = await User.findOne({ email });
         if (existing) {
           return res.status(400).json({ error: "Email already exists" });
         }
 
         const hashed = await bcrypt.hash(password, 10);
 
-        await users.insertOne({
+        await User.create({
           username,
           email,
           password: hashed,
           country: country || null,
           age: age || null,
           gender: gender || null,
-          createdAt: new Date(),
           assessmentCompleted: false,
         });
 
@@ -93,7 +113,7 @@ async function startServer() {
       try {
         const { email, password } = req.body;
 
-        const user = await users.findOne({ email });
+        const user = await User.findOne({ email });
         if (!user) {
           return res.status(400).json({ error: "User not found" });
         }
@@ -109,7 +129,7 @@ async function startServer() {
           { expiresIn: "7d" }
         );
 
-        const { password: _, ...safeUser } = user;
+        const { password: _, ...safeUser } = user.toObject();
 
         res.json({ token, user: safeUser });
       } catch (err) {
@@ -121,7 +141,7 @@ async function startServer() {
     // ================= GET QUESTIONS =================
     app.get("/questions", authenticate, async (req, res) => {
       try {
-        const questions = await questionsCollection.find({}).toArray();
+        const questions = await Question.find({});
         res.json(questions);
       } catch (err) {
         res.status(500).json({ error: "Failed to fetch questions" });
@@ -141,22 +161,68 @@ async function startServer() {
           return res.status(500).json({ error: "DeepSeek API key missing" });
         }
 
+        // Compute Big Five scores server-side using domain info from DB
+        const allQuestions = await Question.find({}, "_id domain");
+        const buckets = { E: [], A: [], C: [], N: [], O: [] };
+        allQuestions.forEach((q) => {
+          const score = answers[q._id.toString()];
+          if (score !== undefined && buckets[q.domain]) {
+            buckets[q.domain].push(Number(score));
+          }
+        });
+        const avg = (arr) =>
+          arr.length ? Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10 : null;
+        const bigFive = {
+          extraversion:      avg(buckets.E),
+          agreeableness:     avg(buckets.A),
+          conscientiousness: avg(buckets.C),
+          neuroticism:       avg(buckets.N),
+          openness:          avg(buckets.O),
+        };
+
+        // Get user's country for localized university recommendations
+        const userDoc = await User.findOne({ email: req.user.email }, "country");
+        const userCountry = userDoc?.country || "Unknown";
+
         const prompt = `
-Return ONLY valid raw JSON.
-Do NOT include markdown or explanation.
+Return ONLY valid raw JSON. Do NOT include markdown or explanation.
 
-Based on these assessment answers:
-${JSON.stringify(answers)}
+A student completed a 90-item IPIP Big Five personality assessment (scale 1–5, 1 = low, 5 = high).
+Computed Big Five domain averages:
+- Extraversion:       ${bigFive.extraversion}
+- Agreeableness:      ${bigFive.agreeableness}
+- Conscientiousness:  ${bigFive.conscientiousness}
+- Neuroticism:        ${bigFive.neuroticism} (lower = more emotionally stable)
+- Openness:           ${bigFive.openness}
 
-Return:
+The student's country is: ${userCountry}
+
+Based on this personality profile:
+1. Recommend exactly 6 careers ranked by match percentage.
+2. Recommend exactly 6 universities: 3 located IN ${userCountry} (mark local: true) and 3 international (mark local: false), all relevant to the top careers.
+
+Return ONLY this exact JSON structure, with no extra keys:
 {
-  "summary": "text",
-  "tags": ["tag1","tag2"],
+  "summary": "2-3 sentence personality summary tailored to career guidance",
+  "tags": ["3 to 5 short personality trait labels"],
   "careers": [
-    { "title": "Career Name", "match": "95%" }
+    {
+      "title": "Career Title",
+      "match": "XX%",
+      "averagePay": "$XX,XXX/yr (use the currency of ${userCountry})",
+      "description": "One concise sentence describing the career."
+    }
   ],
   "universities": [
-    { "name": "University Name", "location": "Country" }
+    {
+      "name": "University Name",
+      "location": "City, Country",
+      "tuition": "$XX,XXX/yr (use the currency of ${userCountry} for local ones)",
+      "major": "Recommended Major",
+      "acceptanceRate": "XX%",
+      "match": "XX%",
+      "local": true
+    }
   ]
 }
 `;
@@ -172,27 +238,37 @@ Return:
               Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
               "Content-Type": "application/json",
             },
-            timeout: 20000,
+            timeout: 60000,
           }
         );
 
         const aiContent = aiResponse.data.choices[0].message.content;
+        console.log("AI RAW:", aiContent.slice(0, 300));
 
         let cleaned = aiContent
-          .replace(/```json/g, "")
+          .replace(/```json/gi, "")
           .replace(/```/g, "")
           .trim();
 
-        const match = cleaned.match(/\{[\s\S]*\}/);
+        // Grab the outermost JSON object
+        const firstBrace = cleaned.indexOf("{");
+        const lastBrace = cleaned.lastIndexOf("}");
+        if (firstBrace === -1 || lastBrace === -1) {
+          console.error("AI RAW RESPONSE (no JSON):", aiContent);
+          return res.status(500).json({ error: "AI returned invalid format", raw: aiContent.slice(0, 500) });
+        }
+        const jsonStr = cleaned.slice(firstBrace, lastBrace + 1);
 
-        if (!match) {
-          console.error("AI RAW RESPONSE:", aiContent);
-          return res.status(500).json({ error: "AI returned invalid format" });
+        let parsed;
+        try {
+          parsed = JSON.parse(jsonStr);
+        } catch (parseErr) {
+          console.error("JSON parse error:", parseErr.message);
+          console.error("JSON string:", jsonStr.slice(0, 500));
+          return res.status(500).json({ error: "AI response JSON parse failed", detail: parseErr.message });
         }
 
-        let parsed = JSON.parse(match[0]);
-
-        await users.updateOne(
+        await User.updateOne(
           { email: req.user.email },
           {
             $set: {
@@ -200,6 +276,7 @@ Return:
               assessmentCompleted: true,
               assessmentDate: new Date(),
               assessmentResult: parsed,
+              bigFiveScores: bigFive,
             },
           }
         );
@@ -210,21 +287,52 @@ Return:
         res.json(parsed);
 
       } catch (err) {
-        console.error("Assessment error:", err.response?.data || err.message);
-        res.status(500).json({ error: "Failed to process assessment" });
+        const detail = err.response?.data || err.message;
+        console.error("Assessment error:", detail);
+        res.status(500).json({ error: "Failed to process assessment", detail: String(detail) });
+      }
+    });
+
+    // ================= SAVE SELECTION =================
+    app.post("/save-selection", authenticate, async (req, res) => {
+      try {
+        const { type, item } = req.body;
+        if (!type || !item) {
+          return res.status(400).json({ error: "Missing type or item" });
+        }
+        if (type !== "career" && type !== "university") {
+          return res.status(400).json({ error: "type must be 'career' or 'university'" });
+        }
+
+        const field = type === "career" ? "selectedCareer" : "selectedUniversity";
+        await User.updateOne(
+          { email: req.user.email },
+          { $set: { [field]: item } }
+        );
+
+        // Return updated user so the app can refresh AsyncStorage
+        const updated = await User.findOne({ email: req.user.email }).select("-password");
+        res.json({ message: "Saved", user: updated });
+      } catch (err) {
+        console.error("Save selection error:", err.message);
+        res.status(500).json({ error: "Failed to save selection" });
       }
     });
 
     // ================= GET RESULTS =================
     app.get("/results", authenticate, async (req, res) => {
       try {
-        const user = await users.findOne({ email: req.user.email });
+        const user = await User.findOne({ email: req.user.email });
 
         if (!user || !user.assessmentResult) {
           return res.status(404).json({ error: "No results found" });
         }
 
-        res.json(user.assessmentResult);
+        res.json({
+          ...user.assessmentResult,
+          selectedCareer: user.selectedCareer || null,
+          selectedUniversity: user.selectedUniversity || null,
+        });
       } catch (err) {
         res.status(500).json({ error: "Failed to fetch results" });
       }
