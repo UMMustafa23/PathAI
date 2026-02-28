@@ -35,6 +35,8 @@ const userSchema = new mongoose.Schema({
   bigFiveScores: { type: mongoose.Schema.Types.Mixed, default: null },
   selectedCareer: { type: mongoose.Schema.Types.Mixed, default: null },
   selectedUniversity: { type: mongoose.Schema.Types.Mixed, default: null },
+  alignmentScore: { type: Number, default: null },
+  scoreHistory: { type: [mongoose.Schema.Types.Mixed], default: [] },
 });
 
 const questionSchema = new mongoose.Schema({
@@ -335,6 +337,154 @@ Return ONLY this exact JSON structure, with no extra keys:
         });
       } catch (err) {
         res.status(500).json({ error: "Failed to fetch results" });
+      }
+    });
+
+    // ================= ALIGNMENT SCORE =================
+    app.post("/alignment-score", authenticate, async (req, res) => {
+      try {
+        const { streakData = {}, currentStreak = 0 } = req.body;
+        // streakData: { "YYYY-MM-DD": completedCount (0-5) }
+
+        const user = await User.findOne({ email: req.user.email });
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        // ---- Compute score deterministically ----
+        // careerMatchBase: from the top recommended career match %
+        const topMatch = user.assessmentResult?.careers?.[0]?.match || "50%";
+        const careerMatchPct = parseInt(String(topMatch)) || 50;
+
+        const today = new Date().toISOString().slice(0, 10);
+
+        // Avg completion over last 7 days (including today)
+        const last7Avg = (() => {
+          let sum = 0, count = 0;
+          for (let i = 0; i < 7; i++) {
+            const d = new Date(); d.setDate(d.getDate() - i);
+            const key = d.toISOString().slice(0, 10);
+            const val = streakData[key] ?? 0;
+            sum += val / 5;
+            count++;
+          }
+          return count ? sum / count : 0;
+        })();
+
+        // Avg completion over last 30 days
+        const last30Avg = (() => {
+          let sum = 0, count = 0;
+          for (let i = 0; i < 30; i++) {
+            const d = new Date(); d.setDate(d.getDate() - i);
+            const key = d.toISOString().slice(0, 10);
+            const val = streakData[key] ?? 0;
+            sum += val / 5;
+            count++;
+          }
+          return count ? sum / count : 0;
+        })();
+
+        // score = careerBase(400) + tasks7d(300) + streak(200) + consistency30d(100)
+        const careerBase   = Math.round(careerMatchPct * 4);         // max 400
+        const tasksScore   = Math.round(last7Avg * 300);             // max 300
+        const streakScore  = Math.min(currentStreak * 10, 200);      // max 200
+        const consScore    = Math.round(last30Avg * 100);            // max 100
+        const newScore     = careerBase + tasksScore + streakScore + consScore; // max 1000
+
+        // ---- Delta vs previous score ----
+        const prevScore = user.alignmentScore ?? newScore;
+        const delta     = newScore - prevScore;
+
+        // ---- AI explanation ----
+        let explanation = "Complete daily goals to improve your score.";
+        if (process.env.DEEPSEEK_API_KEY) {
+          const careerName = user.selectedCareer?.title || user.selectedCareer || "your career";
+          const explPrompt = `You are PathAI. A student's career alignment score just changed from ${prevScore} to ${newScore} (delta: ${delta > 0 ? '+' : ''}${delta}).
+Career: ${careerName}.
+Inputs: career match base ${careerBase}/400, 7-day task completion ${tasksScore}/300 (${Math.round(last7Avg*100)}%), streak score ${streakScore}/200 (${currentStreak} days), 30-day consistency ${consScore}/100 (${Math.round(last30Avg*100)}%).
+Write ONE sentence (max 20 words) explaining what drove the score change. Be specific. Start with the delta like "+5 this week because..." or "No change — " etc.`;
+
+          try {
+            const aiResp = await axios.post(
+              "https://api.deepseek.com/v1/chat/completions",
+              { model: "deepseek-chat", messages: [{ role: "user", content: explPrompt }] },
+              { headers: { Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`, "Content-Type": "application/json" }, timeout: 15000 }
+            );
+            explanation = aiResp.data.choices[0].message.content.trim();
+          } catch (aiErr) {
+            console.warn("AI explanation failed, using fallback");
+          }
+        }
+
+        // ---- Append to history (one entry per day, overwrite if same day) ----
+        const existingHistory = (user.scoreHistory || []).filter(h => h.date !== today);
+        const newEntry = { date: today, score: newScore, explanation };
+        const updatedHistory = [...existingHistory, newEntry]
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .slice(-90); // keep last 90 days
+
+        await User.updateOne(
+          { email: req.user.email },
+          { $set: { alignmentScore: newScore, scoreHistory: updatedHistory } }
+        );
+
+        res.json({ score: newScore, delta, explanation, history: updatedHistory });
+      } catch (err) {
+        console.error("Alignment score error:", err.message);
+        res.status(500).json({ error: "Failed to compute score" });
+      }
+    });
+
+    // ================= CHAT =================
+    app.post("/chat", authenticate, async (req, res) => {
+      try {
+        const { messages } = req.body; // [{ role: 'user'|'assistant', content: string }]
+        if (!messages || !Array.isArray(messages)) {
+          return res.status(400).json({ error: "messages array required" });
+        }
+
+        if (!process.env.DEEPSEEK_API_KEY) {
+          return res.status(500).json({ error: "DeepSeek API key missing" });
+        }
+
+        const user = await User.findOne({ email: req.user.email }).select(
+          "username selectedCareer selectedUniversity bigFiveScores"
+        );
+
+        const careerName =
+          user?.selectedCareer?.title || user?.selectedCareer || "an undecided career";
+        const uniName =
+          user?.selectedUniversity?.name || user?.selectedUniversity || "an undecided university";
+
+        const systemPrompt = `You are PathAI, a focused and encouraging career development coach.
+The user's name is ${user?.username || "the student"}.
+Their chosen career path is: ${careerName}.
+Their target university is: ${uniName}.
+Your role is to guide them with practical advice, daily check-ins, skill development tips, and motivational support strictly related to their career and academic journey.
+Keep responses concise (2-4 sentences max unless they ask for detail). Be warm, direct, and action-oriented.`;
+
+        const aiResponse = await axios.post(
+          "https://api.deepseek.com/v1/chat/completions",
+          {
+            model: "deepseek-chat",
+            messages: [
+              { role: "system", content: systemPrompt },
+              ...messages,
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            timeout: 30000,
+          }
+        );
+
+        const reply = aiResponse.data.choices[0].message.content;
+        res.json({ reply });
+      } catch (err) {
+        const detail = err.response?.data || err.message;
+        console.error("Chat error:", detail);
+        res.status(500).json({ error: "Chat failed", detail: String(detail) });
       }
     });
 
