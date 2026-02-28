@@ -7,6 +7,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveToServer } from '../../utils/sync';
 import API_URL from '../../constants/api';
 
 const { width } = Dimensions.get('window');
@@ -67,6 +68,7 @@ export default function Chatbot() {
   useEffect(() => {
     if (sessions.length > 0) {
       AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+      saveToServer();
     }
   }, [sessions]);
 

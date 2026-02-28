@@ -37,6 +37,14 @@ const userSchema = new mongoose.Schema({
   selectedUniversity: { type: mongoose.Schema.Types.Mixed, default: null },
   alignmentScore: { type: Number, default: null },
   scoreHistory: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  appData: {
+    goals:        { type: mongoose.Schema.Types.Mixed, default: {} },
+    moods:        { type: mongoose.Schema.Types.Mixed, default: {} },
+    plannerTasks: { type: mongoose.Schema.Types.Mixed, default: {} },
+    appSettings:  { type: mongoose.Schema.Types.Mixed, default: {} },
+    chatSessions: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    scoreCache:   { type: mongoose.Schema.Types.Mixed, default: null },
+  },
 });
 
 const questionSchema = new mongoose.Schema({
@@ -430,6 +438,30 @@ Write ONE sentence (max 20 words) explaining what drove the score change. Be spe
       } catch (err) {
         console.error("Alignment score error:", err.message);
         res.status(500).json({ error: "Failed to compute score" });
+      }
+    });
+
+    // ================= SYNC USER DATA =================
+    app.get("/user/sync", authenticate, async (req, res) => {
+      try {
+        const user = await User.findOne({ email: req.user.email }).select("appData");
+        res.json(user?.appData || {});
+      } catch (err) {
+        res.status(500).json({ error: "Failed to load sync data" });
+      }
+    });
+
+    app.post("/user/sync", authenticate, async (req, res) => {
+      try {
+        const { goals, moods, plannerTasks, appSettings, chatSessions, scoreCache } = req.body;
+        await User.updateOne(
+          { email: req.user.email },
+          { $set: { appData: { goals, moods, plannerTasks, appSettings, chatSessions, scoreCache } } }
+        );
+        res.json({ message: "Synced" });
+      } catch (err) {
+        console.error("Sync error:", err.message);
+        res.status(500).json({ error: "Sync failed" });
       }
     });
 

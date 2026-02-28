@@ -12,6 +12,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveToServer } from '../../utils/sync';
 import API_URL from '../../constants/api';
 
 const { width } = Dimensions.get('window');
@@ -319,6 +320,7 @@ export default function Dashboard() {
     const next = ((moodIndex + 1) % 3) as MoodLevel;
     setMoodIndex(next);
     await AsyncStorage.setItem(moodStorageKey, String(next));
+    saveToServer();
     // Regenerate goals for new mood (reset checkboxes — different tasks)
     const newGoalTexts = getDailyGoals(career, university, todayKey, next);
     const newGoals = newGoalTexts.map(text => ({ text, checked: false }));
@@ -333,6 +335,7 @@ export default function Dashboard() {
     setGoals(updated);
     await AsyncStorage.setItem(storageKey, JSON.stringify(updated.map(g => g.checked)));
     computeStreak(streakData, updated);
+    saveToServer();
   };
   // ---------------------------
 
@@ -355,9 +358,6 @@ export default function Dashboard() {
         <View style={styles.header}>
           <Text style={styles.welcomeText}>Welcome, {userName || 'there'}!</Text>
           <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/chatbot')}>
-              <MaterialCommunityIcons name="chat-processing-outline" size={24} color="white" />
-            </TouchableOpacity>
             <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/profile')}>
               <Ionicons name="person" size={24} color="white" />
             </TouchableOpacity>

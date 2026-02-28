@@ -7,6 +7,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveToServer } from '../../utils/sync';
 import API_URL from '../../constants/api';
 
 const { width } = Dimensions.get('window');
@@ -62,6 +63,7 @@ export default function DailyPlanner() {
   const saveTasks = async (updated: Record<string, Task[]>) => {
     setAllTasks(updated);
     await AsyncStorage.setItem(stripKey(), JSON.stringify(updated));
+    saveToServer();
   };
 
   const dayTasks: Task[] = allTasks[selectedKey] ?? [];

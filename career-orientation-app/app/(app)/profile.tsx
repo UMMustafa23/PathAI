@@ -11,6 +11,7 @@ import {
 import { Ionicons, Feather, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { saveToServer } from "../../utils/sync";
 
 export default function Profile() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function Profile() {
   }, []);
 
   const handleLogout = async () => {
+    await saveToServer();
     await AsyncStorage.removeItem("user");
     await AsyncStorage.removeItem("token");
     router.replace("/login");
