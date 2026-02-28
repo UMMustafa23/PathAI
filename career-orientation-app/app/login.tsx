@@ -15,7 +15,6 @@ import { useRouter, Stack } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { loadFromServer } from "../utils/sync";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import API_URL from "../constants/api";
 
 export default function AuthScreen() {

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity,
   Dimensions, Modal, TextInput, KeyboardAvoidingView, Platform,
-  ActivityIndicator, Animated, Alert,
+  ActivityIndicator, Animated, Alert, PanResponder, FlatList,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
@@ -11,12 +11,14 @@ import { saveToServer } from '../../utils/sync';
 import API_URL from '../../constants/api';
 
 const { width } = Dimensions.get('window');
+const CELL       = Math.floor(width / 7);
+const CAL_H      = 330;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Task = { id: string; title: string; startTime: string; endTime: string; completed: boolean };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH_NAMES = ['January','February','March','April','May','June',
                      'July','August','September','October','November','December'];
 
@@ -24,19 +26,67 @@ function toDateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function stripKey(): string { return 'planner_tasks'; }
+// 36 months: currentYear-1, currentYear, currentYear+1
+function buildMonths(centreYear: number) {
+  const out: { year: number; month: number }[] = [];
+  for (let y = centreYear - 1; y <= centreYear + 1; y++)
+    for (let m = 0; m < 12; m++) out.push({ year: y, month: m });
+  return out;
+}
+
+// ─── Month page ───────────────────────────────────────────────────────────────
+function MonthPage({ year, month, selectedKey, todayKey, allTasks, onPickDay }: {
+  year: number; month: number; selectedKey: string; todayKey: string;
+  allTasks: Record<string, Task[]>; onPickDay: (key: string) => void;
+}) {
+  const first      = new Date(year, month, 1);
+  const offset     = first.getDay();
+  const daysInMon  = new Date(year, month + 1, 0).getDate();
+  return (
+    <View style={{ width, paddingHorizontal: 4 }}>
+      <View style={styles.monthTitle}>
+        <Text style={styles.monthTitleText}>{MONTH_NAMES[month]} {year}</Text>
+      </View>
+      <View style={styles.dowRow}>
+        {['S','M','T','W','T','F','S'].map((d, i) => <Text key={i} style={styles.dowText}>{d}</Text>)}
+      </View>
+      <View style={styles.monthGrid}>
+        {Array.from({ length: offset + daysInMon }, (_, i) => {
+          const day = i - offset + 1;
+          if (day < 1) return <View key={i} style={styles.gridCell} />;
+          const key       = toDateKey(new Date(year, month, day));
+          const active    = key === selectedKey;
+          const isToday   = key === todayKey;
+          const hasTasks  = (allTasks[key]?.length ?? 0) > 0;
+          return (
+            <TouchableOpacity key={i} style={styles.gridCell} onPress={() => onPickDay(key)}>
+              <View style={[styles.gridDot, active && styles.gridDotActive, isToday && !active && styles.gridDotToday]}>
+                <Text style={[styles.gridDay, active && styles.gridDayActive, isToday && !active && styles.gridDayToday]}>{day}</Text>
+              </View>
+              {hasTasks && <View style={styles.taskIndicator} />}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function DailyPlanner() {
-  const router  = useRouter();
-  const today   = new Date();
+  const router    = useRouter();
+  const today     = new Date();
+  const todayKey  = toDateKey(today);
+  const centreYear = today.getFullYear();
+  const months    = buildMonths(centreYear);
+  const todayMonthIdx = months.findIndex(m => m.year === centreYear && m.month === today.getMonth());
 
   // ── Date state ──
-  const [selectedKey, setSelectedKey] = useState(toDateKey(today));
-  const [calExpanded, setCalExpanded] = useState(false);
-  const [viewYear,  setViewYear]  = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const calAnim = useRef(new Animated.Value(0)).current;
+  const [selectedKey, setSelectedKey]     = useState(todayKey);
+  const [calExpanded, setCalExpanded]     = useState(false);
+  const [currentMonthIdx, setCurrentMonthIdx] = useState(todayMonthIdx);
+  const calHeightAnim = useRef(new Animated.Value(0)).current;
+  const calListRef    = useRef<FlatList>(null);
 
   // ── Task state ──
   const [allTasks, setAllTasks] = useState<Record<string, Task[]>>({});
@@ -48,111 +98,89 @@ export default function DailyPlanner() {
   const [newEnd,     setNewEnd]     = useState('');
 
   // ── AI organiser ──
-  const [aiLoading,  setAiLoading]  = useState(false);
-  const [aiResult,   setAiResult]   = useState('');
-  const [showAiModal,setShowAiModal]= useState(false);
+  const [aiLoading,   setAiLoading]   = useState(false);
+  const [aiResult,    setAiResult]    = useState('');
+  const [showAiModal, setShowAiModal] = useState(false);
 
-  // ── Load tasks from AsyncStorage on mount ──
   useEffect(() => {
     (async () => {
-      const raw = await AsyncStorage.getItem(stripKey());
+      const raw = await AsyncStorage.getItem('planner_tasks');
       if (raw) setAllTasks(JSON.parse(raw));
     })();
   }, []);
 
+  // ── Calendar expand / collapse ──
+  const expandCal = useCallback(() => {
+    setCalExpanded(true);
+    Animated.spring(calHeightAnim, { toValue: 1, useNativeDriver: false, bounciness: 0, speed: 16 }).start();
+    setTimeout(() => calListRef.current?.scrollToIndex({ index: currentMonthIdx, animated: false }), 60);
+  }, [currentMonthIdx]);
+
+  const collapseCal = useCallback(() => {
+    setCalExpanded(false);
+    Animated.spring(calHeightAnim, { toValue: 0, useNativeDriver: false, bounciness: 0, speed: 16 }).start();
+  }, []);
+
+  // ── Swipe on week strip → expand ──
+  const stripPan = useRef(PanResponder.create({
+    onMoveShouldSetPanResponder: (_, { dy, dx }) => Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx) * 1.5,
+    onPanResponderRelease: (_, { dy }) => { if (dy > 25) expandCal(); if (dy < -25) collapseCal(); },
+  })).current;
+
+  // ── Swipe on full calendar → collapse ──
+  const calPan = useRef(PanResponder.create({
+    onMoveShouldSetPanResponder: (_, { dy, dx }) => Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx) * 1.5,
+    onPanResponderRelease: (_, { dy }) => { if (dy < -25) collapseCal(); if (dy > 25) expandCal(); },
+  })).current;
+
+  const calInterp = calHeightAnim.interpolate({ inputRange: [0, 1], outputRange: [0, CAL_H] });
+
+  // ── Tasks ──
   const saveTasks = async (updated: Record<string, Task[]>) => {
     setAllTasks(updated);
-    await AsyncStorage.setItem(stripKey(), JSON.stringify(updated));
+    await AsyncStorage.setItem('planner_tasks', JSON.stringify(updated));
     saveToServer();
   };
 
   const dayTasks: Task[] = allTasks[selectedKey] ?? [];
 
-  // ── Toggle ──
   const toggleTask = async (id: string) => {
-    const updated = { ...allTasks, [selectedKey]: dayTasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t) };
-    await saveTasks(updated);
+    await saveTasks({ ...allTasks, [selectedKey]: dayTasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t) });
   };
-
-  // ── Delete ──
   const deleteTask = async (id: string) => {
-    const updated = { ...allTasks, [selectedKey]: dayTasks.filter(t => t.id !== id) };
-    await saveTasks(updated);
+    await saveTasks({ ...allTasks, [selectedKey]: dayTasks.filter(t => t.id !== id) });
   };
-
-  // ── Add task ──
   const addTask = async () => {
     if (!newTitle.trim()) return;
-    const task: Task = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
-      title: newTitle.trim(),
-      startTime: newStart.trim() || '',
-      endTime:   newEnd.trim()   || '',
-      completed: false,
-    };
-    const updated = { ...allTasks, [selectedKey]: [...dayTasks, task] };
-    await saveTasks(updated);
-    setNewTitle(''); setNewStart(''); setNewEnd('');
-    setShowAdd(false);
+    const task: Task = { id: `${Date.now()}-${Math.random().toString(36).slice(2,6)}`, title: newTitle.trim(), startTime: newStart.trim() || '', endTime: newEnd.trim() || '', completed: false };
+    await saveTasks({ ...allTasks, [selectedKey]: [...dayTasks, task] });
+    setNewTitle(''); setNewStart(''); setNewEnd(''); setShowAdd(false);
   };
 
-  // ── AI organisation help ──
   const askAI = async () => {
-    if (dayTasks.length === 0) {
-      Alert.alert('No tasks', 'Add some tasks first so AI can help organise them.');
-      return;
-    }
-    setAiLoading(true);
-    setShowAiModal(true);
-    setAiResult('');
+    if (dayTasks.length === 0) { Alert.alert('No tasks', 'Add some tasks first.'); return; }
+    setAiLoading(true); setShowAiModal(true); setAiResult('');
     try {
       const token = await AsyncStorage.getItem('token');
       const taskList = dayTasks.map((t, i) =>
         `${i+1}. "${t.title}"${t.startTime ? ` at ${t.startTime}${t.endTime ? `–${t.endTime}` : ''}` : ''} (${t.completed ? 'done' : 'pending'})`
       ).join('\n');
-
-      const prompt = `Here are my tasks for ${selectedKey}:\n${taskList}\n\nPlease suggest the best order and timing for these tasks to maximise my productivity. Give a concrete time-blocked schedule and briefly explain why this order works well. Keep it concise and practical.`;
-
-      const res = await fetch(`${API_URL}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] }),
-      });
+      const prompt = `Tasks for ${selectedKey}:\n${taskList}\n\nSuggest the best time-blocked order and briefly explain why.`;
+      const res  = await fetch(`${API_URL}/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] }) });
       const json = await res.json();
       setAiResult(res.ok ? json.reply : (json.error ?? 'Something went wrong.'));
-    } catch {
-      setAiResult('Could not reach the server.');
-    } finally {
-      setAiLoading(false);
-    }
+    } catch { setAiResult('Could not reach the server.'); }
+    finally   { setAiLoading(false); }
   };
 
-  // ── Calendar expand toggle ──
-  const toggleCalendar = () => {
-    const toValue = calExpanded ? 0 : 1;
-    setCalExpanded(!calExpanded);
-    Animated.spring(calAnim, { toValue, useNativeDriver: false, bounciness: 0, speed: 14 }).start();
-  };
+  const pickDay = useCallback((key: string) => { setSelectedKey(key); collapseCal(); }, [collapseCal]);
 
-  const calHeight = calAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 280] });
-
-  // ── Build strip week (7 days centred on selected date) ──
-  const selDate = new Date(selectedKey + 'T12:00:00');
+  // ── Week strip ──
+  const selDate   = new Date(selectedKey + 'T12:00:00');
   const stripDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(selDate);
-    d.setDate(selDate.getDate() - selDate.getDay() + i); // week containing selected
-    return d;
+    const d = new Date(selDate); d.setDate(selDate.getDate() - selDate.getDay() + i); return d;
   });
-
-  // ── Build full month grid ──
-  const firstOfMonth = new Date(viewYear, viewMonth, 1);
-  const startOffset  = firstOfMonth.getDay(); // 0=Sun
-  const daysInMonth  = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const gridCells    = startOffset + daysInMonth;
-
-  // ── Selected date header text ──
-  const isTodaySel = toDateKey(today) === selectedKey;
-  const headerLabel = isTodaySel ? 'Today' : `${DAY_NAMES[selDate.getDay()]}, ${MONTH_NAMES[selDate.getMonth()]} ${selDate.getDate()}`;
+  const headerLabel = todayKey === selectedKey ? 'Today' : `${DAY_NAMES[selDate.getDay()]}, ${MONTH_NAMES[selDate.getMonth()]} ${selDate.getDate()}`;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -161,21 +189,20 @@ export default function DailyPlanner() {
       {/* ── Header ── */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{headerLabel}</Text>
-        <TouchableOpacity onPress={toggleCalendar} style={styles.expandBtn}>
+        <TouchableOpacity onPress={calExpanded ? collapseCal : expandCal} style={styles.expandBtn}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name={calExpanded ? 'chevron-up' : 'chevron-down'} size={20} color="#8E8E93" />
         </TouchableOpacity>
       </View>
 
-      {/* ── Week strip ── */}
-      <View style={styles.calendarStrip}>
+      {/* ── Week strip (swipe down to expand) ── */}
+      <View style={styles.calendarStrip} {...stripPan.panHandlers}>
         {stripDays.map((d, i) => {
-          const key    = toDateKey(d);
-          const active = key === selectedKey;
-          const isToday= key === toDateKey(today);
+          const key = toDateKey(d); const active = key === selectedKey; const isT = key === todayKey;
           return (
             <TouchableOpacity key={i} style={styles.dateItem} onPress={() => setSelectedKey(key)}>
               <Text style={[styles.dayText, active && styles.activeText]}>{DAY_NAMES[d.getDay()]}</Text>
-              <View style={[styles.dateDot, active && styles.dateDotActive, isToday && !active && styles.dateDotToday]}>
+              <View style={[styles.dateDot, active && styles.dateDotActive, isT && !active && styles.dateDotToday]}>
                 <Text style={[styles.dateText, active && styles.activeDateText]}>{d.getDate()}</Text>
               </View>
             </TouchableOpacity>
@@ -183,48 +210,23 @@ export default function DailyPlanner() {
         })}
       </View>
 
-      {/* ── Full month (animated) ── */}
-      <Animated.View style={[styles.fullCalendar, { height: calHeight, overflow: 'hidden' }]}>
-        {/* Month navigation */}
-        <View style={styles.monthNav}>
-          <TouchableOpacity onPress={() => { const d = new Date(viewYear, viewMonth-1,1); setViewMonth(d.getMonth()); setViewYear(d.getFullYear()); }}>
-            <Ionicons name="chevron-back" size={22} color="white" />
-          </TouchableOpacity>
-          <Text style={styles.monthNavTitle}>{MONTH_NAMES[viewMonth]} {viewYear}</Text>
-          <TouchableOpacity onPress={() => { const d = new Date(viewYear, viewMonth+1,1); setViewMonth(d.getMonth()); setViewYear(d.getFullYear()); }}>
-            <Ionicons name="chevron-forward" size={22} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Day-of-week headers */}
-        <View style={styles.dowRow}>
-          {['S','M','T','W','T','F','S'].map((d,i) => (
-            <Text key={i} style={styles.dowText}>{d}</Text>
-          ))}
-        </View>
-
-        {/* Day grid */}
-        <View style={styles.monthGrid}>
-          {Array.from({ length: gridCells }, (_, i) => {
-            const day = i - startOffset + 1;
-            if (day < 1 || day > daysInMonth) return <View key={i} style={styles.gridCell} />;
-            const d   = new Date(viewYear, viewMonth, day);
-            const key = toDateKey(d);
-            const active  = key === selectedKey;
-            const isTodayCell = key === toDateKey(today);
-            const hasTasks = (allTasks[key]?.length ?? 0) > 0;
-            return (
-              <TouchableOpacity key={i} style={styles.gridCell} onPress={() => { setSelectedKey(key); toggleCalendar(); }}>
-                <View style={[styles.gridDot, active && styles.gridDotActive, isTodayCell && !active && styles.gridDotToday]}>
-                  <Text style={[styles.gridDay, active && styles.gridDayActive, isTodayCell && !active && styles.gridDayToday]}>
-                    {day}
-                  </Text>
-                </View>
-                {hasTasks && <View style={styles.taskIndicator} />}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+      {/* ── Full year calendar (swipe left/right for months, swipe up to collapse) ── */}
+      <Animated.View style={[styles.fullCalendar, { height: calInterp }]} {...calPan.panHandlers}>
+        <FlatList
+          ref={calListRef}
+          data={months}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(_, i) => String(i)}
+          getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+          initialScrollIndex={todayMonthIdx}
+          onMomentumScrollEnd={e => setCurrentMonthIdx(Math.round(e.nativeEvent.contentOffset.x / width))}
+          renderItem={({ item }) => (
+            <MonthPage year={item.year} month={item.month} selectedKey={selectedKey}
+              todayKey={todayKey} allTasks={allTasks} onPickDay={pickDay} />
+          )}
+        />
       </Animated.View>
 
       {/* ── Task list ── */}
@@ -271,16 +273,16 @@ export default function DailyPlanner() {
 
       {/* ── Bottom Nav ── */}
       <View style={styles.navBar}>
-        <TouchableOpacity onPress={() => router.push('/dashboard')}>
+        <TouchableOpacity onPress={() => router.replace('/dashboard')}>
           <MaterialCommunityIcons name="view-grid-outline" size={26} color="#444" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/planner')}>
+        <TouchableOpacity onPress={() => router.replace('/planner')}>
           <Ionicons name="calendar" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/analytics')}>
+        <TouchableOpacity onPress={() => router.replace('/analytics')}>
           <Ionicons name="stats-chart-outline" size={24} color="#444" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/chatbot')}>
+        <TouchableOpacity onPress={() => router.replace('/chatbot')}>
           <MaterialCommunityIcons name="comment-text-outline" size={24} color="#444" />
         </TouchableOpacity>
       </View>
@@ -370,7 +372,6 @@ export default function DailyPlanner() {
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-const CELL = Math.floor(width / 7);
 
 const styles = StyleSheet.create({
   container:      { flex: 1, backgroundColor: '#0A0A0B' },
@@ -391,21 +392,23 @@ const styles = StyleSheet.create({
   dateText:       { color: '#8E8E93', fontSize: 15, fontWeight: '600' },
   activeDateText: { color: 'black' },
 
-  // Full month calendar
+  // Full calendar (expandable)
   fullCalendar:   { overflow: 'hidden', backgroundColor: '#111113', borderBottomWidth: 0.5, borderBottomColor: '#1C1C1E' },
-  monthNav:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 8 },
-  monthNavTitle:  { color: 'white', fontSize: 16, fontWeight: '600' },
-  dowRow:         { flexDirection: 'row', paddingHorizontal: 4, marginBottom: 4 },
+
+  // Month title in full calendar
+  monthTitle:     { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 },
+  monthTitleText: { color: 'white', fontSize: 15, fontWeight: '600', textAlign: 'center' },
+  dowRow:         { flexDirection: 'row', paddingHorizontal: 4, marginBottom: 2 },
   dowText:        { width: CELL, textAlign: 'center', color: '#48474D', fontSize: 12 },
   monthGrid:      { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 4 },
-  gridCell:       { width: CELL, height: 36, alignItems: 'center', justifyContent: 'center' },
+  gridCell:       { width: CELL, height: 38, alignItems: 'center', justifyContent: 'center' },
   gridDot:        { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   gridDotActive:  { backgroundColor: '#FFFFFF' },
-  gridDotToday:   { borderWidth: 1, borderColor: '#5E5CE6' },
+  gridDotToday:   { borderWidth: 1, borderColor: '#8E8E93' },
   gridDay:        { color: '#8E8E93', fontSize: 13 },
   gridDayActive:  { color: 'black', fontWeight: '600' },
-  gridDayToday:   { color: '#5E5CE6', fontWeight: '600' },
-  taskIndicator:  { width: 4, height: 4, borderRadius: 2, backgroundColor: '#5E5CE6', marginTop: 1 },
+  gridDayToday:   { color: 'white', fontWeight: '600' },
+  taskIndicator:  { width: 4, height: 4, borderRadius: 2, backgroundColor: '#FFFFFF', marginTop: 1 },
 
   // Task list
   scrollContent:  { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 130 },
