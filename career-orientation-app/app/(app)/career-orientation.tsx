@@ -32,6 +32,18 @@ export default function CareerOrientation() {
   const university = user.selectedUniversity;
   const big5       = user.bigFiveScores as Record<string, number> | undefined;
 
+  // assessmentResult may be a plain string or an object {summary, tags, careers, universities}
+  const ar = user.assessmentResult;
+  const arSummary: string | null =
+    !ar ? null
+    : typeof ar === "string" ? ar
+    : typeof ar?.summary === "string" ? ar.summary
+    : null;
+  const arTags: string[] = Array.isArray(ar?.tags) ? ar.tags : [];
+  const arCareers: string[] = Array.isArray(ar?.careers)
+    ? ar.careers.map((c: any) => (typeof c === "string" ? c : c?.title ?? JSON.stringify(c)))
+    : [];
+
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -111,11 +123,26 @@ export default function CareerOrientation() {
         )}
 
         {/* ── Assessment result ── */}
-        {user.assessmentResult && (
+        {(arSummary || arTags.length > 0 || arCareers.length > 0) && (
           <>
             <Text style={[styles.sectionLabel, { marginTop: 26 }]}>Assessment summary</Text>
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryText}>{user.assessmentResult}</Text>
+              {arSummary ? <Text style={styles.summaryText}>{arSummary}</Text> : null}
+              {arTags.length > 0 && (
+                <View style={[styles.tagRow, { marginTop: arSummary ? 14 : 0 }]}>
+                  {arTags.map((tag: string, i: number) => (
+                    <View key={i} style={styles.tag}><Text style={styles.tagText}>{tag}</Text></View>
+                  ))}
+                </View>
+              )}
+              {arCareers.length > 0 && (
+                <View style={{ marginTop: 12 }}>
+                  <Text style={[styles.summaryText, { color: "#8E8E93", fontSize: 12, marginBottom: 8 }]}>SUGGESTED CAREERS</Text>
+                  {arCareers.map((c: string, i: number) => (
+                    <Text key={i} style={[styles.summaryText, { marginBottom: 4 }]}>{"• "}{c}</Text>
+                  ))}
+                </View>
+              )}
             </View>
           </>
         )}

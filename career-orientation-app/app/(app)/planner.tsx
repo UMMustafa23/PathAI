@@ -275,7 +275,7 @@ export default function DailyPlanner() {
         <TouchableOpacity onPress={() => router.push('/planner')}>
           <Ionicons name="calendar" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/analytics')}>
           <Ionicons name="stats-chart-outline" size={24} color="#444" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/chatbot')}>

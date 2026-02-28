@@ -77,7 +77,13 @@ export default function AssessmentLog() {
           <View style={styles.resultCard}>
             <MaterialCommunityIcons name="clipboard-check-outline" size={24} color="#5E5CE6" />
             <View style={{ marginLeft: 14, flex: 1 }}>
-              <Text style={styles.resultTitle}>{user.assessmentResult}</Text>
+              <Text style={styles.resultTitle}>
+                {typeof user.assessmentResult === "string"
+                  ? user.assessmentResult
+                  : typeof user.assessmentResult?.summary === "string"
+                    ? user.assessmentResult.summary
+                    : "Assessment completed"}
+              </Text>
               {user.selectedCareer?.title ? (
                 <Text style={styles.resultSub}>Matched career: {user.selectedCareer.title}</Text>
               ) : null}

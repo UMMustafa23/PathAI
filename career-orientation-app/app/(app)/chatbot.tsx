@@ -246,7 +246,7 @@ export default function Chatbot() {
       <View style={styles.navBar}>
         <TouchableOpacity onPress={() => router.push('/dashboard')}><MaterialCommunityIcons name="view-grid" size={26} color="#444" /></TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/planner')}><Ionicons name="calendar-outline" size={24} color="#444" /></TouchableOpacity>
-        <TouchableOpacity><Ionicons name="stats-chart" size={24} color="#444" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/analytics')}><Ionicons name="stats-chart" size={24} color="#444" /></TouchableOpacity>
         <TouchableOpacity><MaterialCommunityIcons name="comment-text" size={24} color="white" /></TouchableOpacity>
       </View>
 

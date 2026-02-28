@@ -182,6 +182,7 @@ export default function Dashboard() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [career, setCareer] = useState('your career');
   const [university, setUniversity] = useState('your university');
+  const [userName, setUserName] = useState('');
   const storageKey = `goals_checked_${todayKey}`;
 
   // ---- Streak calendar state ----
@@ -288,6 +289,7 @@ export default function Dashboard() {
 
         setCareer(resolvedCareer);
         setUniversity(resolvedUniversity);
+        if (user.username) setUserName(user.username.split(' ')[0]);
 
         // Load saved mood for today
         const savedMood = await AsyncStorage.getItem(moodStorageKey);
@@ -351,7 +353,7 @@ export default function Dashboard() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
         <View style={styles.header}>
-          <Text style={styles.welcomeText}>Welcome, Name!</Text>
+          <Text style={styles.welcomeText}>Welcome, {userName || 'there'}!</Text>
           <View style={styles.headerButtons}>
             <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/chatbot')}>
               <MaterialCommunityIcons name="chat-processing-outline" size={24} color="white" />
@@ -550,7 +552,7 @@ export default function Dashboard() {
         <TouchableOpacity onPress={() => router.push('/planner')}>
             <Ionicons name="calendar-outline" size={24} color="#444" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/analytics')}>
             <Ionicons name="stats-chart" size={24} color="#444" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/chatbot')}>
