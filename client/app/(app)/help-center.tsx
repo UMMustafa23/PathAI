@@ -11,7 +11,7 @@ if (Platform.OS === "android") UIManager.setLayoutAnimationEnabledExperimental?.
 const FAQ: { q: string; a: string }[] = [
   {
     q: "How does the career assessment work?",
-    a: "The assessment analyses your Big Five personality traits, interests, and academic strengths. Based on your answers, PathAI matches you with careers that align with your profile using a weighted scoring algorithm.",
+    a: "The assessment analyzes your Big Five personality traits, interests, and academic strengths. Based on your answers, PathAI matches you with careers that align with your profile using a weighted scoring algorithm.",
   },
   {
     q: "How is my alignment score calculated?",
@@ -31,15 +31,15 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Is my data stored securely?",
-    a: "Yes. Your data is stored in a secured MongoDB database. Passwords are hashed with bcrypt, and all API calls require a JWT token. See Privacy & Security for more details.",
+    a: "Yes. Your data is stored in a secure MongoDB database. Passwords are hashed with bcrypt, and all API calls require a JWT token. See Privacy & Security for more details.",
   },
   {
     q: "How do I use the AI chatbot?",
     a: "Tap the chat icon in the bottom navigation. The AI career coach knows your chosen career and university, so you can ask career-specific questions, get CV tips, or request study advice. Each conversation is saved as a separate session.",
   },
   {
-    q: "What is the 'Help with organisation' button in the planner?",
-    a: "After adding tasks for the day, tap 'Help with organisation' to send your task list to the AI. It will suggest an optimised time-blocked schedule based on your workload.",
+    q: "What is the 'Help with organization' button in the planner?",
+    a: "After adding tasks for the day, tap 'Help with organization' to send your task list to the AI. It will suggest an optimized time-blocked schedule based on your workload.",
   },
   {
     q: "How do I contact support?",

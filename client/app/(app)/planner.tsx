@@ -97,7 +97,7 @@ export default function DailyPlanner() {
   const [newStart,   setNewStart]   = useState('');
   const [newEnd,     setNewEnd]     = useState('');
 
-  // ── AI organiser ──
+  // ── AI organizer ──
   const [aiLoading,   setAiLoading]   = useState(false);
   const [aiResult,    setAiResult]    = useState('');
   const [showAiModal, setShowAiModal] = useState(false);
@@ -267,7 +267,7 @@ export default function DailyPlanner() {
         {/* AI help button */}
         <TouchableOpacity style={styles.aiButton} onPress={askAI}>
           <MaterialCommunityIcons name="brain" size={20} color="black" />
-          <Text style={styles.aiButtonText}>Help with organisation</Text>
+          <Text style={styles.aiButtonText}>Help with organization</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -345,7 +345,7 @@ export default function DailyPlanner() {
             <View style={styles.modalHandle} />
             <View style={styles.aiModalHeader}>
               <MaterialCommunityIcons name="brain" size={20} color="white" />
-              <Text style={styles.modalTitle}>AI Organisation</Text>
+              <Text style={styles.modalTitle}>AI Organization</Text>
             </View>
             <Text style={styles.aiModalDate}>{headerLabel}</Text>
             {aiLoading ? (

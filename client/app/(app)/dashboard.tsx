@@ -33,7 +33,7 @@ const GOAL_TEMPLATES = [
   'Look up scholarship opportunities at {university}',
   'Outline your 6-month roadmap toward entering {career}',
   'Find and save one useful resource about {university}',
-  'Practise one soft skill important in {career} (e.g. communication)',
+  'Practice one soft skill important in {career} (e.g. communication)',
   'Identify one gap in your {career} knowledge and plan how to fill it',
   'Research top companies hiring in {career} and bookmark 3',
   'Learn one new tool or technology used in {career}',
