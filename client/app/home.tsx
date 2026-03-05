@@ -223,9 +223,7 @@ const styles = StyleSheet.create({
   },
   dotActive: { 
     backgroundColor: 'white',
-    shadowColor: '#FFF',
-    shadowRadius: 5,
-    shadowOpacity: 0.8,
+    boxShadow: '0 0 5px rgba(255,255,255,0.8)',
   },
   theoryRow: { 
     flexDirection: 'row', 

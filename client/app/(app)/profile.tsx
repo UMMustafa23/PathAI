@@ -5,7 +5,6 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  Image,
   ScrollView,
 } from "react-native";
 import { Ionicons, Feather, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -68,10 +67,11 @@ export default function Profile() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.avatarSection}>
           <View style={styles.imageContainer}>
-            <Image
-              source={{ uri: "https://via.placeholder.com/150" }}
-              style={styles.avatar}
-            />
+            <View style={styles.avatar}>
+              <Text style={styles.avatarInitials}>
+                {user.username ? user.username.charAt(0).toUpperCase() : "?"}
+              </Text>
+            </View>
             <View style={styles.onlineBadge} />
           </View>
           <Text style={styles.userName}>{user.username}</Text>
@@ -175,6 +175,14 @@ const styles = StyleSheet.create({
     borderRadius: 55,
     borderWidth: 3,
     borderColor: "#1C1C1E",
+    backgroundColor: "#2C2C2E",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarInitials: {
+    color: "white",
+    fontSize: 44,
+    fontWeight: "700",
   },
   onlineBadge: {
     position: "absolute",

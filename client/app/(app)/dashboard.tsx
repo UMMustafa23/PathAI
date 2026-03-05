@@ -602,10 +602,7 @@ const styles = StyleSheet.create({
   monthGrid: { flexDirection: 'row', flexWrap: 'wrap', width: '30%', gap: 4 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#48474D' },
   dotGlow: {
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.95,
-    shadowRadius: 5,
+    boxShadow: '0 0 5px rgba(255,255,255,0.95)',
     elevation: 6,
   },
   dotToday: {
